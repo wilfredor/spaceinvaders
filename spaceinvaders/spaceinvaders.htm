@@ -1,6 +1,5 @@
 <!--
-Tarea de Canvas, Estudios de programación Avanzada
-Universidad Rafael Urdaneta
+under GPL 3
 !-->
 <html>
 	<body onkeydown="nave.move(event);" onmousedown="nave.fire();" onmousemove="nave.move(event);" bgcolor="black" >
@@ -22,7 +21,7 @@ Universidad Rafael Urdaneta
 </html>
 <script type="text/javascript">
 	
-	//Tamaño del área de dibujo
+	//Canvas size
 	canvasWidth = 800;
 	canvasHeight = 500;
 	
@@ -37,7 +36,7 @@ Universidad Rafael Urdaneta
 	
 	var mouseX=0;
 
-	//Tipos de Enemigo y sus scores
+	//Enemy type images
 	var enemiesType = new Array();
 	for (var i=0;i<=2;i++)
 	{
@@ -51,7 +50,7 @@ Universidad Rafael Urdaneta
 	
 	var gameFinished =false;
 
-	//Objeto Enemigo
+	//Object Enemy
 	function enemigo()
 	{
 		this.init = function (x,y,width,height,context,index,enemieType) {
@@ -61,34 +60,32 @@ Universidad Rafael Urdaneta
 			this.y = y;
 			this.index = index;
 			this.context = context;
-			//console.log(enemieType);
 			this.img = enemiesType[enemieType];
 			this.paint();
-			//this.Ifire(this);
 		}
+		
 		this.paint = function (src) {
-			//this.context.fillRect (this.x,this.y,this.width,this.height);
-			//this.img.src = (isset(src))?(src):(this.img.src);
 			this.context.drawImage(this.img, this.x,this.y,this.width,this.height);
 
 		}
+		
 		this.Obstruction = function () {
 			for (var i = 0;i<=window.enemies.element.length-1;i++)
 			{
-				//console.log("Elemento1 x="+window.enemies.element[i].x+" Elemento2 x="+this.x)
 				if ((window.enemies.element[i].x==this.x)&&(window.enemies.element[i].index>this.index))
 					return true;
 			}
 			return false;
 		}
-		//Fuego del enemigo
+		
+		//Enemy fire
 		this.fire = function () {
 			this.directionFire(this.x,this.y,this);
 		}
-		//Trayectoria del proyectil
+		//Fire direction
 		this.directionFire = function (xPos,i,element) {
 			setTimeout(function () {
-				if (i<=canvasHeight-20) //Si no ha llegado al borde de la pantalla
+				if (i<=canvasHeight-20) //If the fire is not in screen border
 				{	
 					//Creo el disparo y borro la estela
 					element.context.clearRect(xPos,i-20,3,9);
@@ -117,7 +114,7 @@ Universidad Rafael Urdaneta
 			},30);
 		}
 	}
-	//Descripción de la lista de Enemis
+	//Descripciï¿½n de la lista de Enemis
 	var enemies = new Object({
 		init: function () {
 			//var canvas = document.getElementById("mycanvas");
@@ -132,7 +129,7 @@ Universidad Rafael Urdaneta
 		},
 		borrarEnemis : function () {
 			//Borrar area a pintar
-			//window.nave.height+9 es el tamaño de la nave y su cañon
+			//window.nave.height+9 es el tamaï¿½o de la nave y su caï¿½on
 			this.context.clearRect(0,0,canvasWidth,canvasHeight - (window.nave.height+9));
 		},//Eliminar un enemigo especifico 
 		remove: function (index) {
@@ -167,7 +164,7 @@ Universidad Rafael Urdaneta
 					enemieType++;
 				}
 			}
-			//Indicar que algún enemigo dispare
+			//Indicar que algï¿½n enemigo dispare
 			this.enemiFire(1000);
 		},//pintar enemigos
 		paint: function (mover_left) {
@@ -217,13 +214,13 @@ Universidad Rafael Urdaneta
 				
 			},velocidad);
 		}, 
-		//Accionar el disparo de algún enemigo
+		//Accionar el disparo de algï¿½n enemigo
 		enemiFire: function(velocidad) {
-			//Primer enemigo de la última fila
+			//Primer enemigo de la ï¿½ltima fila
 			var noEnemiRow = (window.enemies.element.length-(Math.round(canvasWidth/(this.width*2)))-1);
 			setTimeout(function () {
 				//console.log("Elemento a disparar="+randomRange(noEnemiRow, window.enemies.element.length-1))
-				//Cualquier enemigo de la última fila puede hacer fuego
+				//Cualquier enemigo de la ï¿½ltima fila puede hacer fuego
 				var index = randomRange(0, window.enemies.element.length-1);
 				//console.log("Enemigo a disparar="+index);
 				//if(window.enemies.element[index].x==window.nave.x)
@@ -240,7 +237,7 @@ Universidad Rafael Urdaneta
 			
 
 		
-		},//Verifica si un elemento en la posición x,y ha colisionado con algún enemigo
+		},//Verifica si un elemento en la posiciï¿½n x,y ha colisionado con algï¿½n enemigo
 		colision: function (x,y,width,height) {
 			
 			var x1_Fire = x;
@@ -256,7 +253,7 @@ Universidad Rafael Urdaneta
 					var x2_Enemi = this.element[i].x+this.element[i].width;
 					var y2_Enemi = this.element[i].y+this.element[i].height;
 					
-					//Calculo de la colisión
+					//Calculo de la colisiï¿½n
 					if (((y2_Enemi<=y2_Fire)&&(y2_Enemi>=y1_Fire))||((y1_Enemi>=y1_Fire)&&(y1_Enemi<=y2_Fire)))
 					{
 					  if (((x1_Fire>=x1_Enemi)&&(x1_Fire<=x2_Enemi))||((x2_Fire<=x2_Enemi)&&(x2_Fire>=x1_Enemi)))
@@ -271,7 +268,7 @@ Universidad Rafael Urdaneta
 			}
 		}
 	})
-	//Descripción del objeto nave
+	//Descripciï¿½n del objeto nave
 	var nave = new Object({
 		init : function () {
 			
@@ -309,7 +306,7 @@ Universidad Rafael Urdaneta
 					window.nave.context.clearRect(xPos,i+20,2,12);
 					window.nave.context.fillRect(xPos,i,2,12);
 					
-					//Si se encontró con algún obstaculo enemigo, el disparo se detiene
+					//Si se encontrï¿½ con algï¿½n obstaculo enemigo, el disparo se detiene
 					if(enemies.colision(xPos,i,7,12))
 					{
 						i=-5;
@@ -322,11 +319,11 @@ Universidad Rafael Urdaneta
 			},30);
 		},
 		paint: function () {
-			//Dibuja la nave en una posición relativa
+			//Dibuja la nave en una posiciï¿½n relativa
 			this.context.fillStyle = "#7fff00";
 			this.context.clearRect(0,canvasHeight-(this.height+this.height/2),canvasWidth,canvasHeight);
 			this.context.fillRect (this.x,this.y,this.width,this.height);		
-			//Detalles gráficos de la nave
+			//Detalles grï¿½ficos de la nave
 			this.context.fillRect (this.x+24,canvasHeight-30,3,5);
 			this.context.clearRect(this.x-4,canvasHeight-27,7,12);
 			this.context.fillRect (this.x+22,canvasHeight-25,7,12);
@@ -385,7 +382,7 @@ Universidad Rafael Urdaneta
 			return true;
 	};
 	
-	//Obtener un número aleatorio entre un rango
+	//Obtener un nï¿½mero aleatorio entre un rango
 	function randomRange(min, max) {
 	  return ~~(Math.random() * (max - min + 1)) + min
 	}
