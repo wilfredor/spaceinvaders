@@ -1,0 +1,392 @@
+<!--
+Tarea de Canvas, Estudios de programación Avanzada
+Universidad Rafael Urdaneta
+!-->
+<html>
+	<body onkeydown="nave.move(event);" onmousedown="nave.fire();" onmousemove="nave.move(event);" bgcolor="black" >
+			<div style="
+			  position: fixed;
+			  top: 0;
+			  left: 0;
+			  z-index: 999;
+			  width: 800px;
+			  margin-left:10px;
+			  color:white;
+			  height: 23px;
+			  font-family:'Courier New';">
+			<b>Level:</b> <span id="level">1</span> <b>Score:</b> <span id="score">0</span><b style="margin-left:15px;">Lives:</b> <span id="lives">3</span>
+			</div>
+			<canvas id="screen" style= "position:absolute;top:23px;" width="800" height="500" />
+
+	</body>
+</html>
+<script type="text/javascript">
+	
+	//Tamaño del área de dibujo
+	canvasWidth = 800;
+	canvasHeight = 500;
+	
+/*
+	var canvas = document.createElement("canvas");
+	
+    canvas.setAttribute('width', canvasWidth);
+    canvas.setAttribute('height', canvasHeight);
+	document.body.appendChild(canvas);
+*/
+	var canvas = document.getElementById("screen");
+	
+	var mouseX=0;
+
+	//Tipos de Enemigo y sus scores
+	var enemiesType = new Array();
+	for (var i=0;i<=2;i++)
+	{
+		enemiesType[i] = new Image();
+		enemiesType[i].src = "images/enemies"+i+".svg";
+	}
+	
+	var nivel =1;
+	var score =0;
+	document.getElementById("screen").innerHTML = nivel;
+	
+	var gameFinished =false;
+
+	//Objeto Enemigo
+	function enemigo()
+	{
+		this.init = function (x,y,width,height,context,index,enemieType) {
+			this.width = width;
+			this.height = height;
+			this.x = x;
+			this.y = y;
+			this.index = index;
+			this.context = context;
+			//console.log(enemieType);
+			this.img = enemiesType[enemieType];
+			this.paint();
+			//this.Ifire(this);
+		}
+		this.paint = function (src) {
+			//this.context.fillRect (this.x,this.y,this.width,this.height);
+			//this.img.src = (isset(src))?(src):(this.img.src);
+			this.context.drawImage(this.img, this.x,this.y,this.width,this.height);
+
+		}
+		this.Obstruction = function () {
+			for (var i = 0;i<=window.enemies.element.length-1;i++)
+			{
+				//console.log("Elemento1 x="+window.enemies.element[i].x+" Elemento2 x="+this.x)
+				if ((window.enemies.element[i].x==this.x)&&(window.enemies.element[i].index>this.index))
+					return true;
+			}
+			return false;
+		}
+		//Fuego del enemigo
+		this.fire = function () {
+			this.directionFire(this.x,this.y,this);
+		}
+		//Trayectoria del proyectil
+		this.directionFire = function (xPos,i,element) {
+			setTimeout(function () {
+				if (i<=canvasHeight-20) //Si no ha llegado al borde de la pantalla
+				{	
+					//Creo el disparo y borro la estela
+					element.context.clearRect(xPos,i-20,3,9);
+					element.context.fillRect(xPos,i,3,9);
+					
+					//Recursividad, el disparo sigue
+					element.directionFire(xPos,i+20,element);
+				}
+				else
+				{
+					if ((xPos>=window.nave.x)&&(xPos<=(window.nave.x+window.nave.width)))
+					{	
+						window.nave.lives--;
+						if (window.nave.lives<=0)
+						{
+							alert("You are dead");
+							window.location.reload();
+						} else
+						{
+							alert("You have only "+window.nave.lives+" lives");
+							document.getElementById("lives").innerHTML=window.nave.lives;
+						}
+					}else
+					window.enemies.context.clearRect(xPos,i-20,3,9);
+				}
+			},30);
+		}
+	}
+	//Descripción de la lista de Enemis
+	var enemies = new Object({
+		init: function () {
+			//var canvas = document.getElementById("mycanvas");
+			this.context = canvas.getContext("2d");
+			this.x = 0;
+			this.y = 0;
+			this.width = 30;
+			this.height = 30;
+			this.element = new Array();
+			this.initEnemis();
+			this.mover();
+		},
+		borrarEnemis : function () {
+			//Borrar area a pintar
+			//window.nave.height+9 es el tamaño de la nave y su cañon
+			this.context.clearRect(0,0,canvasWidth,canvasHeight - (window.nave.height+9));
+		},//Eliminar un enemigo especifico 
+		remove: function (index) {
+				this.element.splice(index,1);
+				document.getElementById("score").innerHTML = parseInt(score+1);
+				score++;
+				if (this.element.length==0)
+				{
+					alert ("You win");
+					this.borrarEnemis();
+					nivel++;
+					document.getElementById("level").innerHTML=nivel;
+					//Ejecuto los Enemis
+					enemies.init();
+
+				}
+		},
+		initEnemis: function () {
+			var index = 0;
+			for (var i = this.x+this.width;i<=canvasWidth-(this.width);i+=(this.width*2))
+			{
+				var enemieType =0;
+				for (var j = this.y;j<=(canvasHeight-this.height)/2+(canvasHeight-this.height)/6;j+=(this.height+this.height))
+				{
+					
+					//Crear enemigo y agregarlo a la lista de enemies
+					var enemi = new enemigo();
+					enemi.init(i,j,this.width,this.height,this.context,index,enemieType);
+					this.element.push(enemi);
+					index++;
+					if (enemieType<enemiesType.length-1)
+					enemieType++;
+				}
+			}
+			//Indicar que algún enemigo dispare
+			this.enemiFire(1000);
+		},//pintar enemigos
+		paint: function (mover_left) {
+			this.borrarEnemis();
+			for (var i = 0;i<=this.element.length-1;i++)
+			{
+				this.element[i].paint();
+			}
+			return true;
+		},//Mover elementos enemies Horizonatalmente y Verticalmente
+		moverXY: function (mover_left) {
+			for (var i = 0;i<=this.element.length-1;i++)
+			{
+			
+				//Si la variable ha sido seleccionada
+				if (isset(mover_left))
+				//Si lo muevo a la izquierda o derecha
+					this.element[i].x+=(mover_left)?(-this.element[i].width):(this.element[i].width);
+				else
+					this.element[i].y+=this.y;
+				this.element[i].paint();
+				if (this.element[i].y>=(canvasHeight - 3*(window.nave.height)))
+				{
+					alert ("You are dead");
+					window.location.reload();
+					return false;
+				}
+			}
+			return true;
+		},//Mover elementos enemies Horizonatalmente
+		moverX: function (mover_left,velocidad) {
+			var mover =setTimeout(function(){
+				window.enemies.borrarEnemis();
+				
+				//window.enemies.x = (run)*(window.enemies.width);
+				if(window.enemies.moverXY(mover_left))
+					window.enemies.moverX(!mover_left,velocidad);
+
+			},velocidad);
+		}, //Mover Elementos Enemis verticalmente
+		moverY: function (velocidad) {
+			setTimeout(function(){
+				window.enemies.borrarEnemis();
+				window.enemies.y+=window.enemies.height/5;
+				if(window.enemies.moverXY())
+						window.enemies.moverY(velocidad);
+				
+			},velocidad);
+		}, 
+		//Accionar el disparo de algún enemigo
+		enemiFire: function(velocidad) {
+			//Primer enemigo de la última fila
+			var noEnemiRow = (window.enemies.element.length-(Math.round(canvasWidth/(this.width*2)))-1);
+			setTimeout(function () {
+				//console.log("Elemento a disparar="+randomRange(noEnemiRow, window.enemies.element.length-1))
+				//Cualquier enemigo de la última fila puede hacer fuego
+				var index = randomRange(0, window.enemies.element.length-1);
+				//console.log("Enemigo a disparar="+index);
+				//if(window.enemies.element[index].x==window.nave.x)
+					window.enemies.element[index].fire();
+					
+					window.enemies.enemiFire(velocidad);
+			},velocidad);
+		
+		},//Mueve los enemies Vertical y horizontalmente en la pantalla
+		mover: function() {
+			this.moverX(true,800);
+			//Primer nivel es 4000
+			this.moverY(8000*nivel);
+			
+
+		
+		},//Verifica si un elemento en la posición x,y ha colisionado con algún enemigo
+		colision: function (x,y,width,height) {
+			
+			var x1_Fire = x;
+			var y1_Fire = y;
+			var x2_Fire = x+width;
+			var y2_Fire = y+height;
+			
+			for (var i = 0;i<=this.element.length;i++)
+			{
+				if (this.element[i]) {
+					var x1_Enemi = this.element[i].x;
+					var y1_Enemi = this.element[i].y;
+					var x2_Enemi = this.element[i].x+this.element[i].width;
+					var y2_Enemi = this.element[i].y+this.element[i].height;
+					
+					//Calculo de la colisión
+					if (((y2_Enemi<=y2_Fire)&&(y2_Enemi>=y1_Fire))||((y1_Enemi>=y1_Fire)&&(y1_Enemi<=y2_Fire)))
+					{
+					  if (((x1_Fire>=x1_Enemi)&&(x1_Fire<=x2_Enemi))||((x2_Fire<=x2_Enemi)&&(x2_Fire>=x1_Enemi)))
+					  {
+							console.log('eliminado '+i);
+							this.remove(i);
+							return true;
+					  }
+					   
+					}
+				}
+			}
+		}
+	})
+	//Descripción del objeto nave
+	var nave = new Object({
+		init : function () {
+			
+			//var canvas = document.getElementById("mycanvas");
+			this.context = canvas.getContext("2d");
+			this.width = 50;
+			this.height = 20;
+			this.lives = 3;
+			this.disparos = 0;
+			this.maxdisparos = 3;
+			this.x = 0;
+			this.y = canvasHeight-this.height;
+			this.paint();
+			
+		},
+		fire: function () {
+			if (this.disparos<=this.maxdisparos)
+			{
+				this.disparos++;
+				var xPos = window.nave.x+25;
+				var i=(canvasHeight-60);
+				this.directionFire(xPos,i);
+
+			}
+			
+		},
+		directionFire: function(xPos,i)
+		{
+			if ((i<=-20))
+				this.disparos=0;
+			setTimeout(function () {
+				if (i>=-20) //En caso de llegar al borde de la pantalla
+				{	
+					//Creo el disparo y borro la estela
+					window.nave.context.clearRect(xPos,i+20,2,12);
+					window.nave.context.fillRect(xPos,i,2,12);
+					
+					//Si se encontró con algún obstaculo enemigo, el disparo se detiene
+					if(enemies.colision(xPos,i,7,12))
+					{
+						i=-5;
+						enemies.paint();
+					//	this.disparos=0;
+					}
+					//Recursividad, el disparo sigue
+					window.nave.directionFire(xPos,i-20);
+				}
+			},30);
+		},
+		paint: function () {
+			//Dibuja la nave en una posición relativa
+			this.context.fillStyle = "#7fff00";
+			this.context.clearRect(0,canvasHeight-(this.height+this.height/2),canvasWidth,canvasHeight);
+			this.context.fillRect (this.x,this.y,this.width,this.height);		
+			//Detalles gráficos de la nave
+			this.context.fillRect (this.x+24,canvasHeight-30,3,5);
+			this.context.clearRect(this.x-4,canvasHeight-27,7,12);
+			this.context.fillRect (this.x+22,canvasHeight-25,7,12);
+			this.context.clearRect(this.x+this.width-3,canvasHeight-27,7,12);
+			
+		},
+		moveLeft : function (step) {
+			this.x-=this.width/step;
+			if(this.x<=(-this.width))
+				this.x=canvasWidth-this.width;
+			this.paint();
+			
+		},
+		moveRight : function (step) {
+			this.x+=this.width/step;
+			if(this.x>=canvasWidth)
+				this.x=0;
+			this.paint();
+			
+		},
+		move : function (event) {
+				var mouseXaux = event.clientX + document.body.scrollLeft;
+				if (mouseX>mouseXaux)
+					this.moveLeft(5);
+				if (mouseX<mouseXaux)
+					this.moveRight(5);
+				
+				if(mouseX!=mouseXaux)
+					mouseX=mouseXaux;
+			
+				//alert (event.keyCode);
+				if (event.keyCode==37)  //LEFT
+					this.moveLeft(2);
+				else
+				if (event.keyCode==39)  //RIGHT
+					this.moveRight(2);
+				else
+				if (event.keyCode==17)  //UP FIRE
+					this.fire();
+		}
+	})
+	//Ejecuto la Nave
+	nave.init();
+	//Ejecuto los Enemis
+	enemies.init();
+	
+	
+	//Funciones adicionales
+	//Verifica si una variable existe
+	var isset = function(obj, props) {
+		if ((typeof (obj) === 'undefined') || (obj === null))
+			return false;
+		else if (props && props.length > 0)
+			return isset(obj[props.shift()], props);
+		else
+			return true;
+	};
+	
+	//Obtener un número aleatorio entre un rango
+	function randomRange(min, max) {
+	  return ~~(Math.random() * (max - min + 1)) + min
+	}
+</script>
