@@ -3,7 +3,7 @@ Authors:
 
 Wilfredo R. Rodríguez H. (wilfredor@gmail.com)
 
-	Copyright (C) 2013
+    Copyright (C) 2013
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,6 +107,7 @@ function enemy() {
  this.fire = function () {
   this.directionFire(this.x,this.y,this);
  }
+ 
  //Fire direction
  this.directionFire = function (xPos,i,element) {
   setTimeout(function () {
@@ -133,9 +134,12 @@ function enemy() {
    }
   },30);
  }
+ 
 }
+
 //Enemies object array
 var enemies = new Object({
+	
  init: function () {
   this.context = canvas.getContext("2d");
   this.x = 0;
@@ -146,11 +150,14 @@ var enemies = new Object({
   this.initEnemies();
   this.move();
  },
+ 
  removeEnemies : function () {
 		//Clean place
 		//window.nave.height+9 is the nave height + canon
 		this.context.clearRect(0,0,canvasWidth,canvasHeight - (window.nave.height+9));
- },//Remove a enemy bi index in enemies array
+ },
+ 
+ //Remove a enemy bi index in enemies array
  remove: function (index) {
   this.element.splice(index,1);
   _score.innerHTML++;
@@ -164,6 +171,7 @@ var enemies = new Object({
    enemies.init();
   }
  },
+ 
  initEnemies: function () {
   var index = 0;
   for (var i = this.x+this.width;i<=canvasWidth-(this.width);i+=(this.width*2)) {
@@ -180,13 +188,17 @@ var enemies = new Object({
   }
   //this enemy go to fire
   this.enemyFire(1000);
- },//paint all enemies
+ },
+ 
+ //paint all enemies
  paint: function (move_left) {
   this.removeEnemies();
   for (var i = 0;i<=this.element.length-1;i++) 
    this.element[i].paint();
   return true;
- },//Move enemy elements  move elementos enemies Horizontally and Vertically
+ },
+ 
+ //move enemy elements  move elementos enemies Horizontally and Vertically
  moveXY: function (move_left) {
   for (var i = 0;i<=this.element.length-1;i++){
    if (isset(move_left))
@@ -201,14 +213,18 @@ var enemies = new Object({
    }
   }
   return true;
- },//move elements enemies Horizontally
+ },
+ 
+ //move elements enemies Horizontally
  moveX: function (move_left,speed) {
   var move =setTimeout(function(){
    window.enemies.removeEnemies();
    if(window.enemies.moveXY(move_left))
 	window.enemies.moveX(!move_left,speed);
   },speed);
- }, //move elements enemies Vertically
+ }, 
+ 
+ //move elements enemies Vertically
  moveY: function (speed) {
   setTimeout(function(){
    window.enemies.removeEnemies();
@@ -217,6 +233,7 @@ var enemies = new Object({
     window.enemies.moveY(speed);
   },speed);
  }, 
+ 
  //Run fire to a enemy
  enemyFire: function(speed) {
  //First enemy in last row
@@ -227,12 +244,16 @@ var enemies = new Object({
    window.enemies.element[index].fire();
    window.enemies.enemyFire(speed);
   },speed);
- },//Move enemies Vertically and Horizontally in the screen
+ },
+ 
+ //move enemies Vertically and Horizontally in the screen
  move: function() {
   this.moveX(true,800);
   //First speed level is 8000
   this.moveY(8000*_level.innerHTML);
- },//Check if a enemy in array is colision with a fire
+ },
+ 
+ //Check if a enemy in array is colision with a fire
  checkColision: function (x,y,width,height) {
   var x1_Fire = x;
   var y1_Fire = y;
@@ -240,24 +261,26 @@ var enemies = new Object({
   var y2_Fire = y+height;
   for (var i = 0;i<=this.element.length;i++){
    if (this.element[i]) {
-	var x1_enemy = this.element[i].x;
-	var y1_enemy = this.element[i].y;
-	var x2_enemy = this.element[i].x+this.element[i].width;
-	var y2_enemy = this.element[i].y+this.element[i].height;
-	//check colision areas
-	if (((y2_enemy<=y2_Fire)&&(y2_enemy>=y1_Fire))||((y1_enemy>=y1_Fire)&&(y1_enemy<=y2_Fire))){
-	 if (((x1_Fire>=x1_enemy)&&(x1_Fire<=x2_enemy))||((x2_Fire<=x2_enemy)&&(x2_Fire>=x1_enemy))){
-	  console.log('killed '+i);
-	  this.remove(i);
-	  return true;
-	 }  
-	}
+    var x1_enemy = this.element[i].x;
+    var y1_enemy = this.element[i].y;
+    var x2_enemy = this.element[i].x+this.element[i].width;
+    var y2_enemy = this.element[i].y+this.element[i].height;
+    //check colision areas
+    if (((y2_enemy<=y2_Fire)&&(y2_enemy>=y1_Fire))||((y1_enemy>=y1_Fire)&&(y1_enemy<=y2_Fire))){
+     if (((x1_Fire>=x1_enemy)&&(x1_Fire<=x2_enemy))||((x2_Fire<=x2_enemy)&&(x2_Fire>=x1_enemy))){
+      console.log('killed '+i);
+      this.remove(i);
+      return true;
+     }  
+    }
    }
   }
  }
 })
+
 //Object nave definition
 var nave = new Object({
+	
  init : function () {
   this.context = canvas.getContext("2d");
   this.width = 50;
@@ -269,6 +292,7 @@ var nave = new Object({
   this.y = canvasHeight-this.height;
   this.paint(); 
  },
+ 
  fire: function () {
   if (this.shots<=this.maxshots){
    this.shots++;
@@ -277,6 +301,7 @@ var nave = new Object({
    this.directionFire(xPos,i);
   }
  },
+ 
  directionFire: function(xPos,i){
   if ((i<=-20))
    this.shots=0;
@@ -296,6 +321,7 @@ var nave = new Object({
    }
   },30);
  },
+ 
  paint: function () {
   //paint nave in relative screen position
   this.context.fillStyle = "#7fff00";
@@ -307,18 +333,21 @@ var nave = new Object({
   this.context.fillRect (this.x+22,canvasHeight-25,7,12);
   this.context.clearRect(this.x+this.width-3,canvasHeight-27,7,12);
  },
+ 
  moveLeft : function (step) {
   this.x-=this.width/step;
   if(this.x<=(-this.width))
    this.x=canvasWidth-this.width;
   this.paint();
  },
+ 
  moveRight : function (step) {
   this.x+=this.width/step;
   if(this.x>=canvasWidth)
    this.x=0;
   this.paint();
  },
+ 
  move : function (event) {
   var mouseXaux = event.clientX + document.body.scrollLeft;
   if (mouseX>mouseXaux)
@@ -336,7 +365,8 @@ var nave = new Object({
    this.fire();
  }
 })
-//Some tools functions
+
+//------------Some tools functions
 //Check if a var exist
 var isset = function(obj, props) {
  if ((typeof (obj) === 'undefined') || (obj === null))
