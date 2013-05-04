@@ -3,21 +3,20 @@ Authors:
 
 Wilfredo R. Rodríguez H. (wilfredor@gmail.com)
 
-    Copyright (C) 2013
+Copyright (C) 2013
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-	
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 !-->
 <html>
 	<body bgcolor="black" >
@@ -25,7 +24,6 @@ Wilfredo R. Rodríguez H. (wilfredor@gmail.com)
 			  position: fixed;
 			  top: 0;
 			  left: 0;
-			  z-index: 999;
 			  width: 800px;
 			  margin-left:10px;
 			  color:white;
@@ -40,9 +38,11 @@ Wilfredo R. Rodríguez H. (wilfredor@gmail.com)
 <script type="text/javascript">
 
 window.onload = function() {
+ //Input events
  window.document.body.onkeydown=function (event) {nave.move(event);};
  window.document.body.onmousedown=function () {nave.fire();};
  window.document.body.onmousemove=function (event) {nave.move(event);};
+ 
  //Init nave
  nave.init();
  //Init enemies
@@ -53,6 +53,7 @@ window.onload = function() {
 canvasWidth = 800;
 canvasHeight = 500;
 
+//Create canvas element in body
 var canvas = document.createElement("canvas");
 canvas.setAttribute('width', canvasWidth);
 canvas.setAttribute('height', canvasHeight);
@@ -61,33 +62,27 @@ window.document.body.appendChild(canvas);
 
 var mouseX=0;
 
-//Enemy type images
-var enemiesType = new Array();
-for (var i=0;i<=2;i++) {
- enemiesType[i] = new Image();
- enemiesType[i].src = "images/enemies"+i+".svg";
-}
-
+//Where I show the information about level, score and live
 var _level = window.document.getElementById("level");
 var _score = window.document.getElementById("score");
 var _lives = window.document.getElementById("lives");
 
-_level.innerHTML = 1;
-_score.innerHTML = 0;
-_lives.innerHTML = 3;
+_level.textContent = 1;
+_score.textContent = 0;
+_lives.textContent = 3;
 
-var gameFinished =false;
+var gameFinished = false;
 
 //Object Enemy
 function enemy() {
- this.init = function (x,y,width,height,context,index,enemyeType) {
+ this.init = function (x,y,width,height,context,index,enemyType) {
   this.width = width;
   this.height = height;
   this.x = x;
   this.y = y;
   this.index = index;
   this.context = context;
-  this.img = enemiesType[enemyeType];
+  this.img = enemyType;
   this.paint();
  }
 	
@@ -128,7 +123,7 @@ function enemy() {
 	 } else {
 	  alert("You have only "+window.nave.lives+" lives");
 	 }
-	 _lives.innerHTML = window.nave.lives;
+	 _lives.textContent = window.nave.lives;
     }else
 	 window.enemies.context.clearRect(xPos,i-20,3,9);
    }
@@ -137,8 +132,10 @@ function enemy() {
  
 }
 
+
+
 //Enemies object array
-var enemies = new Object({
+var enemies = {
 	
  init: function () {
   this.context = canvas.getContext("2d");
@@ -146,26 +143,27 @@ var enemies = new Object({
   this.y = 0;
   this.width = 30;
   this.height = 30;
-  this.element = new Array();
+  this.element = [];
+  this.enemiesType = [];
   this.initEnemies();
   this.move();
  },
  
  removeEnemies : function () {
-		//Clean place
-		//window.nave.height+9 is the nave height + canon
-		this.context.clearRect(0,0,canvasWidth,canvasHeight - (window.nave.height+9));
+   //Clean place
+  //window.nave.height+9 is the nave height + canon
+  this.context.clearRect(0,0,canvasWidth,canvasHeight - (window.nave.height+9));
  },
  
  //Remove a enemy bi index in enemies array
  remove: function (index) {
   this.element.splice(index,1);
-  _score.innerHTML++;
+  _score.textContent++;
 
   if (this.element.length==0) {
    alert ("You win");
    this.removeEnemies();
-   _level.innerHTML++;
+   _level.textContent++;
 	
    //Init enemies array
    enemies.init();
@@ -173,17 +171,25 @@ var enemies = new Object({
  },
  
  initEnemies: function () {
+ 
+  //Enemy type images
+  var enemiesType = [];
+  for (var i=0;i<=2;i++) {
+   enemiesType[i] = new Image();
+   enemiesType[i].src = "images/enemies"+i+".svg";
+  }
+  
+  //Create a new enemy element and add to enemies array
   var index = 0;
   for (var i = this.x+this.width;i<=canvasWidth-(this.width);i+=(this.width*2)) {
-   var enemyeType =0;
+   var enemyType =0;
    for (var j = this.y;j<=(canvasHeight-this.height)/2+(canvasHeight-this.height)/6;j+=(this.height+this.height)){
-	//Create a new enemy element and add to enemies array
     var enemy_element = new enemy();
-	enemy_element.init(i,j,this.width,this.height,this.context,index,enemyeType);
+	enemy_element.init(i,j,this.width,this.height,this.context,index,enemiesType[enemyType]);
 	this.element.push(enemy_element);
 	index++;
-	if (enemyeType<enemiesType.length-1)
-	 enemyeType++;
+	if (enemyType<enemiesType.length-1)
+	 enemyType++;
    }
   }
   //this enemy go to fire
@@ -250,7 +256,7 @@ var enemies = new Object({
  move: function() {
   this.moveX(true,800);
   //First speed level is 8000
-  this.moveY(8000*_level.innerHTML);
+  this.moveY(8000*_level.textContent);
  },
  
  //Check if a enemy in array is colision with a fire
@@ -276,16 +282,16 @@ var enemies = new Object({
    }
   }
  }
-})
+}
 
 //Object nave definition
-var nave = new Object({
+var nave = {
 	
  init : function () {
   this.context = canvas.getContext("2d");
   this.width = 50;
   this.height = 20;
-  this.lives = _lives.innerHTML;
+  this.lives = _lives.textContent;
   this.shots = 0;
   this.maxshots = 3;
   this.x = 0;
@@ -364,9 +370,9 @@ var nave = new Object({
   else if (event.keyCode==17)  //UP FIRE
    this.fire();
  }
-})
+}
 
-//------------Some tools functions
+//------------Tool functions
 //Check if a var exist
 var isset = function(obj, props) {
  if ((typeof (obj) === 'undefined') || (obj === null))
