@@ -1,5 +1,23 @@
 <!--
-under GPL 3
+Authors:
+
+Wilfredo R. Rodríguez H. (wilfredor@gmail.com)
+
+	Copyright (C) 2013
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	
 !-->
 <html>
 	<body onkeydown="nave.move(event);" onmousedown="nave.fire();" onmousemove="nave.move(event);" bgcolor="black" >
@@ -13,9 +31,11 @@ under GPL 3
 			  color:white;
 			  height: 23px;
 			  font-family:'Courier New';">
-			<b>Level:</b> <span id="level">1</span> <b>Score:</b> <span id="score">0</span><b style="margin-left:15px;">Lives:</b> <span id="lives">3</span>
+				<b>Level:</b><span id="level"></span>
+				<b>Score:</b> <span id="score"></span>
+				<b style="margin-left:15px;">Lives:</b> <span id="lives"></span>
 			</div>
-			<canvas id="screen" style= "position:absolute;top:23px;" width="800" height="500" />
+			
 
 	</body>
 </html>
@@ -25,14 +45,12 @@ under GPL 3
 	canvasWidth = 800;
 	canvasHeight = 500;
 	
-/*
+
 	var canvas = document.createElement("canvas");
-	
     canvas.setAttribute('width', canvasWidth);
     canvas.setAttribute('height', canvasHeight);
+	canvas.setAttribute('style', 'position:absolute;top:23px;');
 	document.body.appendChild(canvas);
-*/
-	var canvas = document.getElementById("screen");
 	
 	var mouseX=0;
 
@@ -44,23 +62,27 @@ under GPL 3
 		enemiesType[i].src = "images/enemies"+i+".svg";
 	}
 	
-	var nivel =1;
-	var score =0;
-	document.getElementById("screen").innerHTML = nivel;
+	var _level = document.getElementById("level");
+	var _score = document.getElementById("score");
+	var _lives = document.getElementById("lives");
+	
+	_level.innerHTML = 1;
+	_score.innerHTML = 0;
+	_lives.innerHTML = 3;
 	
 	var gameFinished =false;
 
 	//Object Enemy
-	function enemigo()
+	function enemy()
 	{
-		this.init = function (x,y,width,height,context,index,enemieType) {
+		this.init = function (x,y,width,height,context,index,enemyeType) {
 			this.width = width;
 			this.height = height;
 			this.x = x;
 			this.y = y;
 			this.index = index;
 			this.context = context;
-			this.img = enemiesType[enemieType];
+			this.img = enemiesType[enemyeType];
 			this.paint();
 		}
 		
@@ -88,9 +110,10 @@ under GPL 3
 				if (i<=canvasHeight-20) //If the fire is not in screen border
 				{	
 					//Creo el disparo y borro la estela
+					element.context.fillStyle = "#FF0000";
 					element.context.clearRect(xPos,i-20,3,9);
 					element.context.fillRect(xPos,i,3,9);
-					
+					element.context.fillStyle = "#7fff00";
 					//Recursividad, el disparo sigue
 					element.directionFire(xPos,i+20,element);
 				}
@@ -106,83 +129,81 @@ under GPL 3
 						} else
 						{
 							alert("You have only "+window.nave.lives+" lives");
-							document.getElementById("lives").innerHTML=window.nave.lives;
 						}
+						_lives.innerHTML = window.nave.lives;
 					}else
-					window.enemies.context.clearRect(xPos,i-20,3,9);
+						window.enemies.context.clearRect(xPos,i-20,3,9);
 				}
 			},30);
 		}
 	}
-	//Descripci�n de la lista de Enemis
+	//Enemies object array
 	var enemies = new Object({
 		init: function () {
-			//var canvas = document.getElementById("mycanvas");
 			this.context = canvas.getContext("2d");
 			this.x = 0;
 			this.y = 0;
 			this.width = 30;
 			this.height = 30;
 			this.element = new Array();
-			this.initEnemis();
-			this.mover();
+			this.initenemys();
+			this.move();
 		},
-		borrarEnemis : function () {
-			//Borrar area a pintar
-			//window.nave.height+9 es el tama�o de la nave y su ca�on
+		removeenemys : function () {
+			//Clean place
+			//window.nave.height+9 is the nave height + canon
 			this.context.clearRect(0,0,canvasWidth,canvasHeight - (window.nave.height+9));
-		},//Eliminar un enemigo especifico 
+		},//Remove a enemy bi index in enemies array
 		remove: function (index) {
 				this.element.splice(index,1);
-				document.getElementById("score").innerHTML = parseInt(score+1);
-				score++;
+				_score.innerHTML++;
+				
 				if (this.element.length==0)
 				{
 					alert ("You win");
-					this.borrarEnemis();
-					nivel++;
-					document.getElementById("level").innerHTML=nivel;
-					//Ejecuto los Enemis
+					this.removeenemys();
+					
+					_level.innerHTML++;
+					
+					//Init enemies array
 					enemies.init();
 
 				}
 		},
-		initEnemis: function () {
+		initenemys: function () {
 			var index = 0;
 			for (var i = this.x+this.width;i<=canvasWidth-(this.width);i+=(this.width*2))
 			{
-				var enemieType =0;
+				var enemyeType =0;
 				for (var j = this.y;j<=(canvasHeight-this.height)/2+(canvasHeight-this.height)/6;j+=(this.height+this.height))
 				{
 					
-					//Crear enemigo y agregarlo a la lista de enemies
-					var enemi = new enemigo();
-					enemi.init(i,j,this.width,this.height,this.context,index,enemieType);
-					this.element.push(enemi);
+					//Create a new enemy element and add to enemies array
+					var enemy_element = new enemy();
+					enemy_element.init(i,j,this.width,this.height,this.context,index,enemyeType);
+					this.element.push(enemy_element);
 					index++;
-					if (enemieType<enemiesType.length-1)
-					enemieType++;
+					if (enemyeType<enemiesType.length-1)
+					enemyeType++;
 				}
 			}
-			//Indicar que alg�n enemigo dispare
-			this.enemiFire(1000);
-		},//pintar enemigos
-		paint: function (mover_left) {
-			this.borrarEnemis();
+			//this enemy go to fire
+			this.enemyFire(1000);
+		},//paint all enemies
+		paint: function (move_left) {
+			this.removeenemys();
 			for (var i = 0;i<=this.element.length-1;i++)
 			{
 				this.element[i].paint();
 			}
 			return true;
-		},//Mover elementos enemies Horizonatalmente y Verticalmente
-		moverXY: function (mover_left) {
+		},//Move enemy elements  move elementos enemies Horizontally and Vertically
+		moveXY: function (move_left) {
 			for (var i = 0;i<=this.element.length-1;i++)
 			{
 			
-				//Si la variable ha sido seleccionada
-				if (isset(mover_left))
-				//Si lo muevo a la izquierda o derecha
-					this.element[i].x+=(mover_left)?(-this.element[i].width):(this.element[i].width);
+				if (isset(move_left))
+					this.element[i].x+=(move_left)?(-this.element[i].width):(this.element[i].width);
 				else
 					this.element[i].y+=this.y;
 				this.element[i].paint();
@@ -194,50 +215,50 @@ under GPL 3
 				}
 			}
 			return true;
-		},//Mover elementos enemies Horizonatalmente
-		moverX: function (mover_left,velocidad) {
-			var mover =setTimeout(function(){
-				window.enemies.borrarEnemis();
+		},//move elements enemies Horizontally
+		moveX: function (move_left,speed) {
+			var move =setTimeout(function(){
+				window.enemies.removeenemys();
 				
-				//window.enemies.x = (run)*(window.enemies.width);
-				if(window.enemies.moverXY(mover_left))
-					window.enemies.moverX(!mover_left,velocidad);
+				if(window.enemies.moveXY(move_left))
+					window.enemies.moveX(!move_left,speed);
 
-			},velocidad);
-		}, //Mover Elementos Enemis verticalmente
-		moverY: function (velocidad) {
+			},speed);
+		}, //move elements enemies Vertically
+		moveY: function (speed) {
 			setTimeout(function(){
-				window.enemies.borrarEnemis();
+				window.enemies.removeenemys();
 				window.enemies.y+=window.enemies.height/5;
-				if(window.enemies.moverXY())
-						window.enemies.moverY(velocidad);
 				
-			},velocidad);
+				if(window.enemies.moveXY())
+						window.enemies.moveY(speed);
+				
+			},speed);
 		}, 
-		//Accionar el disparo de alg�n enemigo
-		enemiFire: function(velocidad) {
-			//Primer enemigo de la �ltima fila
-			var noEnemiRow = (window.enemies.element.length-(Math.round(canvasWidth/(this.width*2)))-1);
+		//Run fire to a enemy
+		enemyFire: function(speed) {
+			//First enemy in last row
+			var noenemyRow = (window.enemies.element.length-(Math.round(canvasWidth/(this.width*2)))-1);
 			setTimeout(function () {
-				//console.log("Elemento a disparar="+randomRange(noEnemiRow, window.enemies.element.length-1))
-				//Cualquier enemigo de la �ltima fila puede hacer fuego
+
+				//Any enemy in last row
 				var index = randomRange(0, window.enemies.element.length-1);
-				//console.log("Enemigo a disparar="+index);
-				//if(window.enemies.element[index].x==window.nave.x)
-					window.enemies.element[index].fire();
+
+				window.enemies.element[index].fire();
 					
-					window.enemies.enemiFire(velocidad);
-			},velocidad);
+				window.enemies.enemyFire(speed);
+				
+			},speed);
 		
-		},//Mueve los enemies Vertical y horizontalmente en la pantalla
-		mover: function() {
-			this.moverX(true,800);
-			//Primer nivel es 4000
-			this.moverY(8000*nivel);
+		},//Move enemies Vertically and Horizontally in the screen
+		move: function() {
+			this.moveX(true,800);
+			//First speed level is 8000
+			this.moveY(8000*_level.innerHTML);
 			
 
 		
-		},//Verifica si un elemento en la posici�n x,y ha colisionado con alg�n enemigo
+		},//Check if a enemy in array is colision with a fire
 		colision: function (x,y,width,height) {
 			
 			var x1_Fire = x;
@@ -248,17 +269,17 @@ under GPL 3
 			for (var i = 0;i<=this.element.length;i++)
 			{
 				if (this.element[i]) {
-					var x1_Enemi = this.element[i].x;
-					var y1_Enemi = this.element[i].y;
-					var x2_Enemi = this.element[i].x+this.element[i].width;
-					var y2_Enemi = this.element[i].y+this.element[i].height;
+					var x1_enemy = this.element[i].x;
+					var y1_enemy = this.element[i].y;
+					var x2_enemy = this.element[i].x+this.element[i].width;
+					var y2_enemy = this.element[i].y+this.element[i].height;
 					
-					//Calculo de la colisi�n
-					if (((y2_Enemi<=y2_Fire)&&(y2_Enemi>=y1_Fire))||((y1_Enemi>=y1_Fire)&&(y1_Enemi<=y2_Fire)))
+					//check colision areas
+					if (((y2_enemy<=y2_Fire)&&(y2_enemy>=y1_Fire))||((y1_enemy>=y1_Fire)&&(y1_enemy<=y2_Fire)))
 					{
-					  if (((x1_Fire>=x1_Enemi)&&(x1_Fire<=x2_Enemi))||((x2_Fire<=x2_Enemi)&&(x2_Fire>=x1_Enemi)))
+					  if (((x1_Fire>=x1_enemy)&&(x1_Fire<=x2_enemy))||((x2_Fire<=x2_enemy)&&(x2_Fire>=x1_enemy)))
 					  {
-							console.log('eliminado '+i);
+							console.log('killed '+i);
 							this.remove(i);
 							return true;
 					  }
@@ -268,26 +289,25 @@ under GPL 3
 			}
 		}
 	})
-	//Descripci�n del objeto nave
+	//Object nave definition
 	var nave = new Object({
 		init : function () {
 			
-			//var canvas = document.getElementById("mycanvas");
 			this.context = canvas.getContext("2d");
 			this.width = 50;
 			this.height = 20;
-			this.lives = 3;
-			this.disparos = 0;
-			this.maxdisparos = 3;
+			this.lives = _lives.innerHTML;
+			this.shots = 0;
+			this.maxshots = 3;
 			this.x = 0;
 			this.y = canvasHeight-this.height;
 			this.paint();
 			
 		},
 		fire: function () {
-			if (this.disparos<=this.maxdisparos)
+			if (this.shots<=this.maxshots)
 			{
-				this.disparos++;
+				this.shots++;
 				var xPos = window.nave.x+25;
 				var i=(canvasHeight-60);
 				this.directionFire(xPos,i);
@@ -298,32 +318,33 @@ under GPL 3
 		directionFire: function(xPos,i)
 		{
 			if ((i<=-20))
-				this.disparos=0;
+				this.shots=0;
 			setTimeout(function () {
-				if (i>=-20) //En caso de llegar al borde de la pantalla
+				if (i>=-20) //If the fire is in screen border
 				{	
-					//Creo el disparo y borro la estela
+					//create fire and delete track
 					window.nave.context.clearRect(xPos,i+20,2,12);
 					window.nave.context.fillRect(xPos,i,2,12);
 					
-					//Si se encontr� con alg�n obstaculo enemigo, el disparo se detiene
+					//if some enemy the fire stop
 					if(enemies.colision(xPos,i,7,12))
 					{
 						i=-5;
 						enemies.paint();
-					//	this.disparos=0;
+					//	this.shots=0;
 					}
-					//Recursividad, el disparo sigue
+					//Recursion, the shot is going
 					window.nave.directionFire(xPos,i-20);
 				}
 			},30);
 		},
 		paint: function () {
-			//Dibuja la nave en una posici�n relativa
+			//paint nave in relative screen position
 			this.context.fillStyle = "#7fff00";
 			this.context.clearRect(0,canvasHeight-(this.height+this.height/2),canvasWidth,canvasHeight);
-			this.context.fillRect (this.x,this.y,this.width,this.height);		
-			//Detalles gr�ficos de la nave
+			this.context.fillRect (this.x,this.y,this.width,this.height);	
+			
+			//Nave canon
 			this.context.fillRect (this.x+24,canvasHeight-30,3,5);
 			this.context.clearRect(this.x-4,canvasHeight-27,7,12);
 			this.context.fillRect (this.x+22,canvasHeight-25,7,12);
@@ -365,14 +386,14 @@ under GPL 3
 					this.fire();
 		}
 	})
-	//Ejecuto la Nave
+	//Init nave
 	nave.init();
-	//Ejecuto los Enemis
+	//Init enemies
 	enemies.init();
 	
 	
-	//Funciones adicionales
-	//Verifica si una variable existe
+	//Some tools functions
+	//Check if a var exist
 	var isset = function(obj, props) {
 		if ((typeof (obj) === 'undefined') || (obj === null))
 			return false;
@@ -382,8 +403,8 @@ under GPL 3
 			return true;
 	};
 	
-	//Obtener un n�mero aleatorio entre un rango
+	//A random number multiple of 5
 	function randomRange(min, max) {
-	  return ~~(Math.random() * (max - min + 1)) + min
+	  return Math.round((Math.random()*(max-min)+min)/5)*5;
 	}
 </script>
