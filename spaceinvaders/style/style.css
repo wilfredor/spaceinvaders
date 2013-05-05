@@ -1,0 +1,13 @@
+#info {
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 800px;
+ margin-left:10px;
+ color:white;
+ height: 23px;
+ font-family:'Courier New';
+}
+#lives {
+ margin-left:15px;
+}
