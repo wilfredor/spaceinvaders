@@ -60,7 +60,7 @@ var enemies = {
   var enemiesType = [];
   for (var i=0;i<=2;i++) {
    enemiesType[i] = new Image();
-   enemiesType[i].src = "images/enemies"+i+".svg";
+   enemiesType[i].src = "spaceinvaders/images/enemies"+i+".svg";
   }
   
   //Create a new enemy element and add to enemies array
