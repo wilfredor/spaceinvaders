@@ -1,3 +1,5 @@
+<img src="http://wilfredor.github.io/spaceinvaders/spaceinvaders/images/enemies0.svg"><img src="http://wilfredor.github.io/spaceinvaders/spaceinvaders/images/enemies1.svg">&nbsp;&nbsp;<img src="http://wilfredor.github.io/spaceinvaders/spaceinvaders/images/enemies2.svg">
+
 spaceinvaders
 =============
 
@@ -5,12 +7,13 @@ Space Invaders is an arcade video game designed by Tomohiro Nishikado and releas
 It was originally manufactured and sold by Taito in Japan, and was later licensed for production 
 in the United States by the Midway division of Bally.
 
-How to play?
-=============
+## How to play?
 
 This game in JavaScript canvas is a try of representation of the original game. For run this game
-only copy all files to your hard drive and run index.html over Firefox or Chrome.
+download [all files](https://github.com/wilfredor/spaceinvaders/archive/master.zip) to your hard drive and run index.html over Firefox or Chrome.
 
-Online test here: http://wilfredor.github.io/spaceinvaders/
+Online test [here](http://wilfredor.github.io/spaceinvaders/)
 
-More information, please write to wilfredor@gmail.com
+## Authors
+
+**Wilfredo Rodríguez** (wilfredor@gmail.com)
