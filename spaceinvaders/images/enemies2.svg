@@ -10,12 +10,12 @@
    version="1.0"
    width="50"
    height="50"
-   inkscape:version="0.48.3.1 r9886"
+   inkscape:version="0.48.2 r9819"
    inkscape:export-filename="/Users/dgomes/Desktop/space invader.png"
    inkscape:export-xdpi="90"
    inkscape:export-ydpi="90"
    id="svg2995"
-   sodipodi:docname="enemies0.svg">
+   sodipodi:docname="enemies2.svg">
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -25,7 +25,7 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="706"
+     inkscape:window-width="1519"
      inkscape:window-height="480"
      id="namedview3003"
      showgrid="false"
@@ -53,6 +53,6 @@
   <path
      inkscape:connector-curvature="0"
      d="m 16.8 14.3 -0.2 4.3 -12.5 0.2 0 4.3 -3.9 0 0 13 12 0.2 0.3 4 -4.1 -0.2 -0.2 4.7 -8.2 0 0 4.5 8.2 0 0 -4.4 8.4 -0.2 0.2 -4.3 4.1 0 0 -4.1 8.2 0 0 2 0 2 4.1 0 0.2 4.3 8.4 0.2 0 4.4 8.2 0 0 -4.5 -8.2 0 -0.2 -4.7 -4.1 0 -0 -3.7 12.3 -0.4 0 -13 -3.9 0.1 0 -4.3 -12.5 -0.2 -0.2 -4.3 -16.3 0 z m 12.3 26.1 -8.2 0 0 4.5 8.2 0 z m 0 -13 8.2 0 0.2 4.3 -8.4 0.2 z m -16.6 0.2 8.2 0 0.2 4.3 -8.5 -0 z"
-     style="fill:#ffffff;fill-opacity:1"
+     style="fill:#ff6600;fill-opacity:1"
      id="path3001" />
 </svg>
