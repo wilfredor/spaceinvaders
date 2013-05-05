@@ -35,13 +35,13 @@ var mouseX=0;
 //Where I show the information about level, score and live
 var _level = window.document.getElementById("level");
 var _score = window.document.getElementById("score");
-var _lives = window.document.getElementById("lives");
+var _life = window.document.getElementById("life");
 
 _level.textContent = 1;
 _score.textContent = 0;
-_lives.textContent = 3;
+_life.textContent = 3;
 
-var gameFinished = false;
+var gamePaused = false;
 
 window.onload = function() {
  //Input events

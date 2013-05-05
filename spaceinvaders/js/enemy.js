@@ -46,30 +46,32 @@ function enemy() {
  
  //Enemy fire
  this.fire = function () {
-  this.directionFire(this.x,this.y,this);
+  if (!window.gamePaused) 
+   this.directionFire(this.x,this.y,this);
  }
  
  //Fire direction
  this.directionFire = function (xPos,i,element) {
   setTimeout(function () {
    if (i<=canvasHeight-20) {//If the fire is not in screen border	
-	//Creo el disparo y borro la estela
+	//Make a fire and delete track
 	element.context.fillStyle = "#FF0000";
 	element.context.clearRect(xPos,i-20,3,9);
 	element.context.fillRect(xPos,i,3,9);
 	element.context.fillStyle = "#7fff00";
-	//Recursividad, el disparo sigue
+	//the fire resume trayectory
 	element.directionFire(xPos,i+20,element);
    } else {
 	if ((xPos>=window.nave.x)&&(xPos<=(window.nave.x+window.nave.width))) {	
-	 window.nave.lives--;
-	 if (window.nave.lives<=0){
+	 window.nave.life--;
+	 _life.textContent = window.nave.life;
+	 if (window.nave.life<=0){
 	  alert("You are dead");
 	  window.location.reload();
 	 } else {
-	  alert("You have only "+window.nave.lives+" lives");
+	  alert("You have only "+nave.life+" life");
+	  nave.init();
 	 }
-	 _lives.textContent = window.nave.lives;
     }else
 	 window.enemies.context.clearRect(xPos,i-20,3,9);
    }

@@ -88,18 +88,21 @@ var enemies = {
   return true;
  },
  
- //move enemy elements  move elementos enemies Horizontally and Vertically
+ //move enemy elements  move elements enemies Horizontally and Vertically
  moveXY: function (move_left) {
-  for (var i = 0;i<=this.element.length-1;i++){
-   if (isset(move_left))
-	this.element[i].x+=(move_left)?(-this.element[i].width):(this.element[i].width);
-   else
-	this.element[i].y+=this.y;
-   this.element[i].paint();
-   if (this.element[i].y>=(canvasHeight - 3*(window.nave.height))){
-	alert ("You are dead");
-	window.location.reload();
-	return false;
+  if (!window.gamePaused) {
+   window.enemies.removeEnemies(); //clean enemies for repaint
+   for (var i = 0;i<=this.element.length-1;i++){
+    if (isset(move_left)) //If move is Horizontally
+ 	 this.element[i].x+=(move_left)?(-this.element[i].width):(this.element[i].width);
+    else
+ 	 this.element[i].y+=this.height/5; //Else if move is Vertically and step is 5
+    this.element[i].paint(); //repaint enemies in new x,y
+    if (this.element[i].y>=(canvasHeight - 3*(window.nave.height))){ //If Enemy is in nave area
+	 alert ("You are dead");
+	 window.location.reload();
+	 return false;
+    }
    }
   }
   return true;
@@ -107,21 +110,22 @@ var enemies = {
  
  //move elements enemies Horizontally
  moveX: function (move_left,speed) {
-  var move =setTimeout(function(){
-   window.enemies.removeEnemies();
-   if(window.enemies.moveXY(move_left))
-	window.enemies.moveX(!move_left,speed);
-  },speed);
+  setTimeout(function(){
+    if(window.enemies.moveXY(move_left)) {
+     move_left = (!window.gamePaused)?(!move_left):(move_left); //If game is paused don't move Horizontally
+	 window.enemies.moveX(move_left,speed);
+    }
+   }
+  ,speed);
  }, 
  
  //move elements enemies Vertically
  moveY: function (speed) {
   setTimeout(function(){
-   window.enemies.removeEnemies();
-   window.enemies.y+=window.enemies.height/5;
-   if(window.enemies.moveXY())
-    window.enemies.moveY(speed);
-  },speed);
+    //window.enemies.y+=window.enemies.height/5;
+    if(window.enemies.moveXY())
+	 window.enemies.moveY(speed);
+   },speed);
  }, 
  
  //Run fire to a enemy

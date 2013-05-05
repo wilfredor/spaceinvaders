@@ -26,7 +26,7 @@ var nave = {
   this.context = canvas.getContext("2d");
   this.width = 50;
   this.height = 20;
-  this.lives = _lives.textContent;
+  this.life = _life.textContent;
   this.shots = 0;
   this.maxshots = 3;
   this.x = 0;
@@ -90,19 +90,23 @@ var nave = {
  },
  
  move : function (event) {
-  var mouseXaux = event.clientX + document.body.scrollLeft;
-  if (mouseX>mouseXaux)
-   this.moveLeft(5);
-  if (mouseX<mouseXaux)
-   this.moveRight(5);
-  if(mouseX!=mouseXaux)
-   mouseX=mouseXaux;
-  //alert (event.keyCode);
-  if (event.keyCode==37)  //LEFT
-   this.moveLeft(2);
-  else if (event.keyCode==39)  //RIGHT
-   this.moveRight(2);
-  else if (event.keyCode==17)  //UP FIRE
-   this.fire();
+  if (event.keyCode==80)
+   window.gamePaused=!window.gamePaused;
+  if (!window.gamePaused) {
+   var mouseXaux = event.clientX + document.body.scrollLeft;
+   if (mouseX>mouseXaux)
+    this.moveLeft(5);
+   if (mouseX<mouseXaux)
+    this.moveRight(5);
+   if(mouseX!=mouseXaux)
+    mouseX=mouseXaux;
+   //alert (event.keyCode);
+   if (event.keyCode==37)  //LEFT
+    this.moveLeft(2);
+   else if (event.keyCode==39)  //RIGHT
+    this.moveRight(2);
+   else if ((event.keyCode==17)||(event.keyCode==32))  //UP FIRE
+    this.fire();
+  }
  }
 }
