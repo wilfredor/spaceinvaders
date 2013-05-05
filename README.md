@@ -6,6 +6,6 @@ It was originally manufactured and sold by Taito in Japan, and was later license
 in the United States by the Midway division of Bally.
 
 This game in JavaScript canvas is a try of representation of the original game. For run this game
-only copy all files to your hard drive and run spaceinvaders.htm over Firefox or Chrome.
+only copy all files to your hard drive and run index.html over Firefox or Chrome.
 
 More information, please write to wilfredor@gmail.com
