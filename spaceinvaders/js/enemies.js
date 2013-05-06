@@ -99,7 +99,7 @@ var enemies = {
  	 this.element[i].y+=this.height/5; //Else if move is Vertically and step is 5
     this.element[i].paint(); //repaint enemies in new x,y
     if (this.element[i].y>=(canvasHeight - 3*(window.nave.height))){ //If Enemy is in nave area
-	 alert ("You are dead");
+	 window.game.showMessage("You are dead");
 	 window.location.reload();
 	 return false;
     }
