@@ -12,8 +12,6 @@ in the United States by the Midway division of Bally.
 This game in JavaScript canvas is a try of representation of the original game. For run this game
 download [all files](https://github.com/wilfredor/spaceinvaders/archive/master.zip) to your hard drive and run index.html over Firefox or Chrome.
 
-Online test [here](http://wilfredor.github.io/spaceinvaders/)
-
 ## Authors
 
 **Wilfredo Rodríguez** (wilfredor@gmail.com)
