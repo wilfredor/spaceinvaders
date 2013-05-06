@@ -23,29 +23,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var game = {
 	
  init : function () {
-	 this.paused = false;
-	 //Init nave
-	 nave.init();
-	 //Init enemies
-	 enemies.init();
+  this.paused = false;
+  //Init nave
+  nave.init();
+  //Init enemies
+  enemies.init();
 	 
  },
+ 
  showMessage: function (messageContent) {
-	 document.getElementById('game').style.display = 'none';
-	 document.getElementById('message').textContent = messageContent;
-	 setTimeout(function () {
-		 window.game.hideMessage();
-	 },3000);
+  this.paused = true;
+  var x = canvas.width / 2; //Center text in canvas 
+  var y = canvas.height / 2;
+  var ctx = canvas.getContext("2d");
+  ctx.font = "30px Courier New";
+  ctx.fillStyle = 'white';
+  ctx.fill();
+  ctx.textAlign = 'center';
+  ctx.fillText(messageContent, x, y);
+	  
+   if (messageContent!="Pause")
+    setTimeout(function () {
+     window.game.paused = false;
+    },3000);
 	 
  },
- hideMessage: function () {
-	 document.getElementById('game').style.display = 'block';
-	 document.getElementById('message').textContent = '';
- },
+ 
  pause: function (pause) {
-	 document.getElementById('message').textContent = (pause)?("Pause..."):("");
-	  
-	 this.paused = pause;
+  if (pause)
+   this.showMessage("Pause");
+	 
+  this.paused = pause;
 	 
  }
  
