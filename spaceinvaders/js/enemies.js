@@ -45,7 +45,7 @@ var enemies = {
   _score.textContent++;
 
   if (this.element.length==0) {
-   alert ("You win");
+   window.game.showMessage("You win");
    this.removeEnemies();
    _level.textContent++;
 	
