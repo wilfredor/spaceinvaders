@@ -8,6 +8,21 @@
  height: 23px;
  font-family:'Courier New';
 }
+#message {
+ color:white;
+ font-family:'Courier New';
+ margin-left:320px;/* center message*/
+ vertical-align:middle;
+}
 #lives {
  margin-left:15px;
+}
+#game {
+ z-index:1000;
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 800px;
+ height: 523px;
+
 }

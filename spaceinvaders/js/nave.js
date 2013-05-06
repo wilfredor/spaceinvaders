@@ -91,8 +91,8 @@ var nave = {
  
  move : function (event) {
   if (event.keyCode==80)
-   window.gamePaused=!window.gamePaused;
-  if (!window.gamePaused) {
+   window.game.pause(!window.game.paused);
+  if (!window.game.paused) {
    var mouseXaux = event.clientX + document.body.scrollLeft;
    if (mouseX>mouseXaux)
     this.moveLeft(5);

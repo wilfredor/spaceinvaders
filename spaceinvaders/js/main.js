@@ -27,8 +27,8 @@ canvasHeight = 500;
 var canvas = document.createElement("canvas");
 canvas.setAttribute('width', canvasWidth);
 canvas.setAttribute('height', canvasHeight);
-canvas.setAttribute('style', 'position:absolute;top:23px;');
-window.document.body.appendChild(canvas);
+canvas.setAttribute('style', 'position:absolute;top:23px;');//Space for level,score and life
+window.document.getElementById("game").appendChild(canvas);
 
 var mouseX=0;
 
@@ -41,16 +41,11 @@ _level.textContent = 1;
 _score.textContent = 0;
 _life.textContent = 3;
 
-var gamePaused = false;
-
 window.onload = function() {
  //Input events
  window.document.body.onkeydown=function (event) {nave.move(event);};
  window.document.body.onmousedown=function () {nave.fire();};
  window.document.body.onmousemove=function (event) {nave.move(event);};
  
- //Init nave
- nave.init();
- //Init enemies
- enemies.init();
+ game.init();
 }

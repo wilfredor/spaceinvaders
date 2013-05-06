@@ -90,7 +90,7 @@ var enemies = {
  
  //move enemy elements  move elements enemies Horizontally and Vertically
  moveXY: function (move_left) {
-  if (!window.gamePaused) {
+  if (!window.game.paused) {
    window.enemies.removeEnemies(); //clean enemies for repaint
    for (var i = 0;i<=this.element.length-1;i++){
     if (isset(move_left)) //If move is Horizontally
@@ -112,7 +112,7 @@ var enemies = {
  moveX: function (move_left,speed) {
   setTimeout(function(){
     if(window.enemies.moveXY(move_left)) {
-     move_left = (!window.gamePaused)?(!move_left):(move_left); //If game is paused don't move Horizontally
+     move_left = (!window.game.paused)?(!move_left):(move_left); //If game is paused don't move Horizontally
 	 window.enemies.moveX(move_left,speed);
     }
    }

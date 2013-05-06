@@ -46,7 +46,7 @@ function enemy() {
  
  //Enemy fire
  this.fire = function () {
-  if (!window.gamePaused) 
+  if (!window.game.paused) 
    this.directionFire(this.x,this.y,this);
  }
  
