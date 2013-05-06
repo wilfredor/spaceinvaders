@@ -13,6 +13,7 @@
  font-family:'Courier New';
  margin-left:320px;/* center message*/
  vertical-align:middle;
+ font-size:100%
 }
 #lives {
  margin-left:15px;

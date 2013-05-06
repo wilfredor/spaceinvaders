@@ -66,10 +66,13 @@ function enemy() {
 	 window.nave.life--;
 	 _life.textContent = window.nave.life;
 	 if (window.nave.life<=0){
-	  alert("You are dead");
-	  window.location.reload();
+	  window.game.showMessage("You are dead");
+	  setTimeout(function(){
+		  window.location.reload();
+	  },3000)
+	  
 	 } else {
-	  alert("You have only "+nave.life+" life");
+	 // alert("You have only "+nave.life+" life");
 	  nave.init();
 	 }
     }else

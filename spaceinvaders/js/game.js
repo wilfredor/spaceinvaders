@@ -33,16 +33,18 @@ var game = {
  showMessage: function (messageContent) {
 	 document.getElementById('game').style.display = 'none';
 	 document.getElementById('message').textContent = messageContent;
+	 setTimeout(function () {
+		 window.game.hideMessage();
+	 },3000);
+	 
  },
  hideMessage: function () {
 	 document.getElementById('game').style.display = 'block';
 	 document.getElementById('message').textContent = '';
  },
  pause: function (pause) {
-	 if (pause)
-	  this.showMessage("Pause...");
-	 else
-	  this.hideMessage();
+	 document.getElementById('message').textContent = (pause)?("Pause..."):("");
+	  
 	 this.paused = pause;
 	 
  }
