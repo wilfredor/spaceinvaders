@@ -33,6 +33,7 @@ var game = {
  
  showMessage: function (messageContent) {
   this.paused = true;
+  window.enemies.removeEnemies();
   var x = canvas.width / 2; //Center text in canvas 
   var y = canvas.height / 2;
   var ctx = canvas.getContext("2d");
