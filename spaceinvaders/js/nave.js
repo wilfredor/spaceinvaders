@@ -35,12 +35,14 @@ var nave = {
  },
  
  fire: function () {
-  if (this.shots<=this.maxshots){
-   this.shots++;
-   var xPos = window.nave.x+25;
-   var i=(canvasHeight-60);
-   this.directionFire(xPos,i);
-  }
+  if (!window.game.paused) {
+   if (this.shots<=this.maxshots){
+    this.shots++;
+    var xPos = window.nave.x+25;
+    var i=(canvasHeight-60);
+    this.directionFire(xPos,i);
+   }
+  } 
  },
  
  directionFire: function(xPos,i){
