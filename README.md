@@ -1,4 +1,4 @@
-<img src="http://wilfredor.github.io/spaceinvaders/spaceinvaders/images/enemies0.svg"><img src="http://wilfredor.github.io/spaceinvaders/spaceinvaders/images/enemies1.svg">&nbsp;&nbsp;<img src="http://wilfredor.github.io/spaceinvaders/spaceinvaders/images/enemies2.svg">
+
 
 spaceinvaders
 =============
