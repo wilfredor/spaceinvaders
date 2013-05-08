@@ -37,7 +37,8 @@ function enemy() {
  }
 	
  this.Obstruction = function () {
-  for (var i = 0;i<=window.enemies.element.length-1;i++) {
+  var elementNumber = window.enemies.element.length-1;
+  for (var i = 0;i<=elementNumber;i++) {
    if ((window.enemies.element[i].x==this.x)&&(window.enemies.element[i].index>this.index))
 	return true;
   }
