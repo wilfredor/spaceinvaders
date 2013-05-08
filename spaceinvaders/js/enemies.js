@@ -65,9 +65,12 @@ var enemies = {
   
   //Create a new enemy element and add to enemies array
   var index = 0;
-  for (var i = this.x+this.width;i<=canvasWidth-(this.width);i+=(this.width*2)) {
+  var screenBorderWidth = canvasWidth-(this.width);
+  var step = this.width*2;
+  var screenBorderHeight = canvasHeight-this.height;
+  for (var i = this.x+this.width;i<=screenBorderWidth;i+=step) {
    var enemyType =0;
-   for (var j = this.y;j<=(canvasHeight-this.height)/2+(canvasHeight-this.height)/6;j+=(this.height+this.height)){
+   for (var j = this.y;j<=(screenBorderHeight)/2+(screenBorderHeight)/6;j+=(this.height*2)){
     var enemy_element = new enemy();
 	enemy_element.init(i,j,this.width,this.height,this.context,index,enemiesType[enemyType]);
 	this.element.push(enemy_element);
@@ -92,7 +95,8 @@ var enemies = {
  moveXY: function (move_left) {
   if (!window.game.paused) {
    window.enemies.removeEnemies(); //clean enemies for repaint
-   for (var i = 0;i<=this.element.length-1;i++){
+   var elementsNumber = this.element.length-1;
+   for (var i = 0;i<=elementsNumber;i++){
     if (isset(move_left)) //If move is Horizontally
  	 this.element[i].x+=(move_left)?(-this.element[i].width):(this.element[i].width);
     else
