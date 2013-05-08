@@ -157,7 +157,8 @@ var enemies = {
   var y1_Fire = y;
   var x2_Fire = x+width;
   var y2_Fire = y+height;
-  for (var i = 0;i<=this.element.length;i++){
+  var elementsNumber = this.element.length;
+  for (var i = 0;i<=elementsNumber;i++){
    if (this.element[i]) {
     var x1_enemy = this.element[i].x;
     var y1_enemy = this.element[i].y;
