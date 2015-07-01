@@ -1,16 +1,24 @@
-
-
 spaceinvaders
 =============
 
-Space Invaders is an arcade video game designed by Tomohiro Nishikado and released in 1978. 
-It was originally manufactured and sold by Taito in Japan, and was later licensed for production 
-in the United States by the Midway division of Bally.
+A JavaScript/canvas clone of Space Invaders, the 1978 arcade video game designed by Tomohiro Nishikado.
 
-## How to play?
+## gh-pages branch
 
-This game in JavaScript canvas is a try of representation of the original game. For run this game
-download [all files](https://github.com/wilfredor/spaceinvaders/archive/master.zip) to your hard drive and run index.html over Firefox or Chrome.
+This is the `gh-pages` branch, it is for the website located at http://wilfredor.github.io/spaceinvaders.
+
+You can switch to this directory using `git checkout gh-pages` if you're using the command line interface for git.
+
+## How to play
+
+You can either play online:
+
+  * http://wilfredor.github.io/spaceinvaders
+
+... or you can:
+
+  * [Download the repo (zip)](https://github.com/wilfredor/spaceinvaders/archive/master.zip), extract, and run `index.html` in Firefox or Chrome
+  * `git clone https://github.com/wilfredor/spaceinvaders.git` and run `index.html`
 
 ## Authors
 
