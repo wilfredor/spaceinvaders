@@ -13,7 +13,3 @@ You can either play online:
 
   * [Download the repo (zip)](https://github.com/wilfredor/spaceinvaders/archive/master.zip), extract, and run `index.html` in Firefox or Chrome
   * `git clone https://github.com/wilfredor/spaceinvaders.git` and run `index.html`
-
-## Authors
-
-**Wilfredo Rodríguez** (wilfredor@gmail.com)
