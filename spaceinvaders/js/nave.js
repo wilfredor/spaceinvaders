@@ -111,4 +111,4 @@ var nave = {
     this.fire();
   }
  }
-}
+};
