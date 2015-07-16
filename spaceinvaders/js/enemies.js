@@ -44,7 +44,7 @@ var enemies = {
   this.element.splice(index,1);
   _score.textContent++;
 
-  if (this.element.length==0) {
+  if (this.element.length===0) {
    window.game.showMessage("You win");
    this.removeEnemies();
    _level.textContent++;
@@ -58,7 +58,8 @@ var enemies = {
  
   //Enemy type images
   var enemiesType = [];
-  for (var i=0;i<=2;i++) {
+  var i;
+  for (i=0;i<=2;i++) {
    enemiesType[i] = new Image();
    enemiesType[i].src = "spaceinvaders/images/enemies"+i+".svg";
   }
@@ -68,7 +69,7 @@ var enemies = {
   var screenBorderWidth = canvasWidth-(this.width);
   var step = this.width*2;
   var screenBorderHeight = canvasHeight-this.height;
-  for (var i = this.x+this.width;i<=screenBorderWidth;i+=step) {
+  for (i = this.x+this.width;i<=screenBorderWidth;i+=step) {
    var enemyType =0;
    for (var j = this.y;j<=(screenBorderHeight)/2+(screenBorderHeight)/6;j+=(this.height*2)){
     var enemy_element = new enemy();
@@ -119,8 +120,8 @@ var enemies = {
      move_left = (!window.game.paused)?(!move_left):(move_left); //If game is paused don't move Horizontally
 	 window.enemies.moveX(move_left,speed);
     }
-   }
-  ,speed);
+   },
+  speed);
  }, 
  
  //move elements enemies Vertically
@@ -175,4 +176,4 @@ var enemies = {
    }
   }
  }
-}
+};
