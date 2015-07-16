@@ -48,4 +48,4 @@ window.onload = function() {
  window.document.body.onmousemove=function (event) {nave.move(event);};
  
  game.init();
-}
+};
