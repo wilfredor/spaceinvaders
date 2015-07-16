@@ -30,11 +30,11 @@ function enemy() {
   this.context = context;
   this.img = enemyType;
   this.paint();
- }
+ };
 	
  this.paint = function (src) {
   this.context.drawImage(this.img, this.x,this.y,this.width,this.height);
- }
+ };
 	
  this.Obstruction = function () {
   var elementNumber = window.enemies.element.length-1;
@@ -43,13 +43,13 @@ function enemy() {
 	return true;
   }
   return false;
- }
+ };
  
  //Enemy fire
  this.fire = function () {
   if (!window.game.paused) 
    this.directionFire(this.x,this.y,this);
- }
+ };
  
  //Fire direction
  this.directionFire = function (xPos,i,element) {
@@ -70,7 +70,7 @@ function enemy() {
 	  window.game.showMessage("You are dead");
 	  setTimeout(function(){
 		  window.location.reload();
-	  },3000)
+	  },3000);
 	  
 	 } else {
 	 // alert("You have only "+nave.life+" life");
@@ -80,6 +80,6 @@ function enemy() {
 	 window.enemies.context.clearRect(xPos,i-20,3,9);
    }
   },30);
- }
+ };
  
 }
