@@ -26,8 +26,8 @@ var isset = function(obj, props) {
   return false;
  else if (props && props.length > 0)
   return isset(obj[props.shift()], props);
- else
-  return true;
+ 
+ return true;
 };
 //A random number multiple of 5
 function randomRange(min, max) {
