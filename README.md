@@ -5,7 +5,7 @@ A JavaScript/canvas clone of Space Invaders, the 1978 arcade video game designed
 
 ## How to play
 
-You can either play online:
+You can either play online using your mouse or keyboard arrows:
 
   * http://wilfredor.github.io/spaceinvaders
 
