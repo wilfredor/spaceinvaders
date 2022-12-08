@@ -58,60 +58,85 @@ var enemies = {
  
   //Enemy type images
   var enemiesType = [];
-  var i;
-  for (i=0;i<=2;i++) {
-   enemiesType[i] = new Image();
-   enemiesType[i].src = "spaceinvaders/images/enemies"+i+".svg";
-  }
+  enemiesType = [0, 1, 2].map(i => {
+    var enemyImage = new Image();
+    enemyImage.src = `spaceinvaders/images/enemies${i}.svg`;
+    return enemyImage;
+  });
   
   //Create a new enemy element and add to enemies array
-  var index = 0;
-  var screenBorderWidth = canvasWidth-(this.width);
-  var step = this.width*2;
-  var screenBorderHeight = canvasHeight-this.height;
-  for (i = this.x+this.width;i<=screenBorderWidth;i+=step) {
-   var enemyType =0;
-   for (var j = this.y;j<=(screenBorderHeight)/2+(screenBorderHeight)/6;j+=(this.height*2)){
-    var enemy_element = new enemy();
-	enemy_element.init(i,j,this.width,this.height,this.context,index,enemiesType[enemyType]);
-	this.element.push(enemy_element);
-	index++;
-	if (enemyType<enemiesType.length-1)
-	 enemyType++;
+ var index = 0;
+ var screenBorderWidth = canvasWidth - this.width;
+ var screenBorderHeight = canvasHeight - this.height;
+ var step = this.width * 2;
+
+ for (i = this.x + this.width; i <= screenBorderWidth; i += step) {
+   for (var j = this.y; j <= (screenBorderHeight / 2) + (screenBorderHeight / 6); j += (this.height * 2)) {
+     for (var enemyType = 0; enemyType < enemiesType.length; enemyType++) {
+       var enemy_element = new enemy();
+       enemy_element.init(i, j, this.width, this.height, this.context, index, enemiesType[enemyType]);
+       this.element.push(enemy_element);
+       index++;
+     }
    }
-  }
+ }
   //this enemy go to fire
   this.enemyFire(1000);
  },
- 
- //paint all enemies
- paint: function (move_left) {
+
+//paint all enemies
+paint: function (move_left) {
   this.removeEnemies();
-  for (var i = 0;i<=this.element.length-1;i++) 
-   this.element[i].paint();
+
+  this.element.forEach(function(element) {
+    if (!element.isPainted) {
+      element.paint();
+    }
+  });
+
   return true;
- },
+},
  
  //move enemy elements  move elements enemies Horizontally and Vertically
- moveXY: function (move_left) {
-  if (!window.game.paused) {
-   window.enemies.removeEnemies(); //clean enemies for repaint
-   var elementsNumber = this.element.length-1;
-   for (var i = 0;i<=elementsNumber;i++){
-    if (isset(move_left)) //If move is Horizontally
- 	 this.element[i].x+=(move_left)?(-this.element[i].width):(this.element[i].width);
-    else
- 	 this.element[i].y+=this.height/5; //Else if move is Vertically and step is 5
-    this.element[i].paint(); //repaint enemies in new x,y
-    if (this.element[i].y>=(canvasHeight - 3*(window.nave.height))){ //If Enemy is in nave area
-	 window.game.showMessage("You are dead");
-	 window.location.reload();
-	 return false;
+ moveXY: function (moveLeft) {
+  // Initialize the game and naveHeight variables with the corresponding properties
+  // of the global window object.
+  var game = window.game;
+  var naveHeight = window.nave.height;
+
+  // If the game is not paused, proceed to move the enemies.
+  if (!game.paused) {
+    // Remove the enemies to repaint them in their new position.
+    window.enemies.removeEnemies();
+
+    // Calculate the number of elements in the this.element array.
+    var elementsNumber = this.element.length - 1;
+
+    // Iterate over each element in the this.element array.
+    for (var i = 0; i <= elementsNumber; i++) {
+      // If moveLeft is undefined, move the element down by a step of 5.
+      // If moveLeft is defined, move the element left or right depending on
+      // whether the value of moveLeft is true or false.
+      if (moveLeft === undefined) {
+        this.element.i.y += this.height / 5;
+      } else {
+        this.element.i.x += (moveLeft) ? -this.element.i.width : this.element.i.width;
+      }
+
+      // Repaint the element in its new x, y position.
+      this.element.i.paint();
+
+      // If the element is in the nave area, show a game over message and reload the page.
+      if (this.element.i.y >= (canvasHeight - 3 * naveHeight)) {
+        game.showMessage("You are dead");
+        window.location.reload();
+        return false;
+      }
     }
-   }
   }
+
   return true;
- },
+},
  
  //move elements enemies Horizontally
  moveX: function (move_left,speed) {
@@ -153,27 +178,30 @@ var enemies = {
  },
  
  //Check if a enemy in array is colision with a fire
- checkColision: function (x,y,width,height) {
-  var x1_Fire = x;
-  var y1_Fire = y;
-  var x2_Fire = x+width;
-  var y2_Fire = y+height;
-  var elementsNumber = this.element.length;
-  for (var i = 0;i<=elementsNumber;i++){
-   if (this.element[i]) {
-    var x1_enemy = this.element[i].x;
-    var y1_enemy = this.element[i].y;
-    var x2_enemy = this.element[i].x+this.element[i].width;
-    var y2_enemy = this.element[i].y+this.element[i].height;
-    //check colision areas
-    if (((y2_enemy<=y2_Fire)&&(y2_enemy>=y1_Fire))||((y1_enemy>=y1_Fire)&&(y1_enemy<=y2_Fire))){
-     if (((x1_Fire>=x1_enemy)&&(x1_Fire<=x2_enemy))||((x2_Fire<=x2_enemy)&&(x2_Fire>=x1_enemy))){
-      console.log('killed '+i);
-      this.remove(i);
+ checkColision: function(x, y, width, height) {
+  // Create an object to store the coordinates and dimensions of the object to check
+  const obj = { x1: x, y1: y, x2: x + width, y2: y + height };
+
+  // Loop through all elements in the game
+  for (const element of this.elements) {
+    // Create an object to store the coordinates and dimensions of the current element
+    const elementObj = {
+      x1: element.x,
+      y1: element.y,
+      x2: element.x + element.width,
+      y2: element.y + element.height
+    };
+
+    // Check if the object to check collides with the current element
+    if (this.intersects(obj, elementObj)) {
+      // If there is a collision, remove the element and return true
+      this.remove(element);
       return true;
-     }  
     }
-   }
   }
- }
+
+  // If there is no collision with any element, return false
+  return false;
+}
+	
 };
