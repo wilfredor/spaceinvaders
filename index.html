@@ -1,11 +1,6 @@
 <html>
  <head>
-  <link href="spaceinvaders/style/style.css" rel="stylesheet" type="text/css">
-  <script language="javascript" type="text/javascript" src="spaceinvaders/js/enemy.js"></script>
-  <script language="javascript" type="text/javascript" src="spaceinvaders/js/enemies.js"></script>
-  <script language="javascript" type="text/javascript" src="spaceinvaders/js/nave.js"></script>
-  <script language="javascript" type="text/javascript" src="spaceinvaders/js/tools.js"></script>
-  <script language="javascript" type="text/javascript" src="spaceinvaders/js/game.js"></script>
+  <link href="style/style.css" rel="stylesheet" type="text/css">
  </head>
  <body bgcolor="black" >
   <div id="info">
@@ -16,7 +11,9 @@
   </div>
   
   <div id="game"></div>
+  <script>var exports = {};</script>
+
+  <script language="javascript" type="module" src="dist/bundle.js"></script>
   
-  <script language="javascript" type="text/javascript" src="spaceinvaders/js/main.js"></script>
  </body>
 </html>
