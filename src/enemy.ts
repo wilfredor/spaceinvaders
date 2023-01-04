@@ -35,7 +35,8 @@ export class Enemy {
    Obstruction() {
       var elementNumber = this.enemies.element.length - 1;
       for (var i = 0; i <= elementNumber; i++) {
-         if ((this.enemies.element[i].x == this.x) && (this.enemies.element[i].index > this.index))
+         if ((this.enemies.element[i].x == this.x) && 
+             (this.enemies.element[i].index > this.index))
             return true;
       }
       return false;
@@ -68,9 +69,8 @@ export class Enemy {
                      window.location.reload();
                   }, 3000);
 
-               } else {
-                  // alert("You have only "+nave.life+" life");
-                  //nave.init();
+               } else if (this.enemies.nave.life===1) {
+                  alert("You have only "+this.enemies.nave.life+" life");
                }
             } else
                this.enemies.context?.clearRect(xPos, i - 20, 3, 9);

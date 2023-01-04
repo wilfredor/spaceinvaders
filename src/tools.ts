@@ -1,4 +1,3 @@
-//------------Tool functions
 //Check if a var exist
 export class Tool {
 
