@@ -11,28 +11,36 @@ export class Config {
     life: HTMLElement | null;
 
     constructor() {
-        //Canvas size
+        // Canvas size.
         this.canvasWidth = 800;
         this.canvasHeight = 500;
-
-        //Create canvas element in body
-        this.canvas = window.document.createElement("canvas");
-
-        this.game = window.document.getElementById("game");
-
+      
+        // Create canvas element in body.
+        this.canvas = document.createElement('canvas');
+      
+        this.game = document.getElementById('game');
+      
         this.mouseX = 0;
-        //Where I show the information about level, score and live
-        this.level = window.document.getElementById("level");
-        this.score = window.document.getElementById("score");
-        this.life = window.document.getElementById("life");
-
+        // Where I show the information about level, score and live.
+        this.level = document.getElementById('level');
+        this.score = document.getElementById('score');
+        this.life = document.getElementById('life');
+      
         this.canvas.setAttribute('width', String(this.canvasWidth));
         this.canvas.setAttribute('height', String(this.canvasHeight));
-        this.canvas.setAttribute('style', 'position:absolute;top:23px;');//Space for level,score and life
-        this.game?.appendChild(this.canvas);
-
-        if (this.level) this.level.textContent = "1";
-        if (this.score) this.score.textContent = "0";
-        if (this.life) this.life.textContent = "3";
-    }
+        this.canvas.setAttribute('style', 'position:absolute;top:23px;'); // Space for level, score and life.
+        if (this.game) {
+          this.game.appendChild(this.canvas);
+        }
+      
+        if (this.level) {
+          this.level.textContent = '1';
+        }
+        if (this.score) {
+          this.score.textContent = '0';
+        }
+        if (this.life) {
+          this.life.textContent = '3';
+        }
+      }      
 }

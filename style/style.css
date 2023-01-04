@@ -21,3 +21,14 @@
  width: 800px;
  height: 523px;
 }
+
+.pause {
+    left: 0;
+    text-align:right;
+    float:right;
+    text-align: right;
+}
+
+body {
+    background-color: black;
+}
