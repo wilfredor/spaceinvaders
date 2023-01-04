@@ -169,7 +169,6 @@ var Enemies = /** @class */ (function () {
     Enemies.prototype.enemyFire = function (speed) {
         var _this = this;
         //First enemy in last row
-        // var noenemyRow = (this.element.length-(Math.round(this.config.canvasWidth/(this.width*2)))-1);
         setTimeout(function () {
             //Any enemy in last row
             var index = tools_1.Tool.randomRange(0, _this.element.length - 1);
