@@ -1,7 +1,7 @@
 spaceinvaders
 =============
 
-A JavaScript/canvas clone of Space Invaders, the 1978 arcade video game designed by Tomohiro Nishikado.
+A TypeScript/canvas clone of Space Invaders, the 1978 arcade video game designed by Tomohiro Nishikado.
 
 ## How to play
 
