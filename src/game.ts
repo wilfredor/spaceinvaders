@@ -1,5 +1,4 @@
 import { Config } from "./config";
-import { Enemies } from "./enemies";
 export class Game {
   paused: boolean;
   config: Config;
@@ -13,14 +12,13 @@ export class Game {
     // window.enemies.removeEnemies();
     var x = this.config.canvas.width / 2; //Center text in canvas 
     var y = this.config.canvas.height / 2;
-    var ctx = this.config.canvas.getContext("2d") as CanvasRenderingContext2D;
-    if (ctx) {
-      ctx.font = "30px Courier New";
-      ctx.fillStyle = 'white';
-      ctx.fill();
-      ctx.textAlign = 'center';
-      ctx.fillText(messageContent, x, y);
-    }
+
+    this.config.context.font = "30px Courier New";
+    this.config.context.fillStyle = 'white';
+    this.config.context.fill();
+    this.config.context.textAlign = 'center';
+    this.config.context.fillText(messageContent, x, y);
+    
 
     if (messageContent != "Pause") {
       setTimeout(() => {

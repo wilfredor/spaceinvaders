@@ -8,8 +8,7 @@ export class Enemy {
    x: number;
    y: number;
    index: number;
-   context: CanvasRenderingContext2D;
-   img: any;
+   img: HTMLImageElement;
    enemies: Enemies;
    game: Game;
    config: Config;
@@ -19,9 +18,7 @@ export class Enemy {
       this.x = x;
       this.y = y;
       this.index = index;
-      this.context = enemies.config.canvas.getContext("2d") as CanvasRenderingContext2D;
       this.img = enemyType;
-
       this.enemies = enemies;
       this.game = this.enemies.game;
       this.config = this.enemies.config;
@@ -29,7 +26,7 @@ export class Enemy {
    }
 
    paint() {
-      this.context.drawImage(this.img, this.x, this.y, this.width, this.height);
+      this.config.context.drawImage(this.img, this.x, this.y, this.width, this.height);
    }
 
    Obstruction() {
@@ -51,18 +48,18 @@ export class Enemy {
    //Fire direction
    directionFire(xPos: number, i: number, element: this) {
       setTimeout(() => {
-         if (i <= this.config.canvasHeight - 20) {//If the fire is not in screen border	
+         if (i <= this.config.canvas.height - 20) {//If the fire is not in screen border	
             //Make a fire and delete track
-            element.context.fillStyle = "#FF0000";
-            element.context.clearRect(xPos, i - 20, 3, 9);
-            element.context.fillRect(xPos, i, 3, 9);
-            element.context.fillStyle = "#7fff00";
+            this.config.context.fillStyle = "#FF0000";
+            this.config.context.clearRect(xPos, i - 20, 3, 9);
+            this.config.context.fillRect(xPos, i, 3, 9);
+            this.config.context.fillStyle = "#7fff00";
             //the fire resume trayectory
             element.directionFire(xPos, i + 20, element);
          } else {
             if ((xPos >= this.enemies.nave.x) && (xPos <= (this.enemies.nave.x + this.width))) {
                this.enemies.nave.life--;
-               if (this.config.life?.textContent) this.config.life.textContent = String(this.enemies.nave.life);
+               this.config.life = this.enemies.nave.life;
                if (this.enemies.nave.life <= 0) {
                   this.game.showMessage("You are dead");
                   setTimeout(function () {
@@ -73,7 +70,7 @@ export class Enemy {
                   alert("You have only "+this.enemies.nave.life+" life");
                }
             } else
-               this.enemies.context?.clearRect(xPos, i - 20, 3, 9);
+            this.config.context.clearRect(xPos, i - 20, 3, 9);
          }
       }, 30);
    };

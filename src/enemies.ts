@@ -5,26 +5,19 @@ import { Nave } from "./nave";
 import { Tool } from "./tools";
 
 export class Enemies {
-  context: CanvasRenderingContext2D;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  element: any[];
-  enemiesType: HTMLImageElement[];
+  x!: number;
+  y!: number;
+  width!: number;
+  height!: number;
+  element!: any[];
+  enemiesType!: HTMLImageElement[];
   nave: Nave;
   game: Game;
   config: Config;
 
   constructor(game: Game, nave: Nave, config: Config) {
     this.config = config;
-    this.context = this.config.canvas.getContext("2d") as CanvasRenderingContext2D;
-    this.x = 0;
-    this.y = 0;
-    this.width = 30;
-    this.height = 30;
-    this.element = [];
-    this.enemiesType = [];
+    this.reset();
     this.nave = nave;
     this.game = game;
     this.initEnemies();
@@ -42,19 +35,22 @@ export class Enemies {
 
   removeEnemies() {
     //Clean place
-    //window.nave.height+9 is the nave height + canon
-    this.context?.clearRect(0, 0, this.config.canvasWidth, this.config.canvasHeight - (this.nave.height + 9));
+    //9 is the canon height
+    this.config.context.clearRect(0, 
+                                  0, 
+                                  this.config.canvas.width, 
+                                  this.config.canvas.height - (this.nave.height + 9));
   }
 
   //Remove a enemy bi index in enemies array
   remove(index: number) {
     this.element?.splice(index, 1);
-    if (this.config.score) this.config.score.textContent = String(Number(this.config.score?.textContent) + 1);
+    this.config.score++;
 
     if (this.element?.length === 0) {
       this.game.showMessage(`You win`);
       this.removeEnemies();
-      if (this.config.level) this.config.level.textContent = String(Number(this.config.level?.textContent) + 1);
+      this.config.level++;
 
       //Init enemies array
       this.reset();
@@ -72,9 +68,9 @@ export class Enemies {
   
     // Create a new enemy element and add to enemies array.
     let index = 0;
-    const screenBorderWidth = this.config.canvasWidth - this.width;
+    const screenBorderWidth = this.config.canvas.width - this.width;
     const step = this.width * 2;
-    const screenBorderHeight = this.config.canvasHeight - this.height;
+    const screenBorderHeight = this.config.canvas.height - this.height;
     for (let i = this.x + this.width; i <= screenBorderWidth; i += step) {
       let enemyType = 0;
       for (
@@ -119,7 +115,7 @@ export class Enemies {
         this.element[i].paint(); // Repaint enemies in new x, y.
   
         // If enemy is in nave area.
-        if (this.element[i].y >= this.config.canvasHeight - 3 * this.nave.height) {
+        if (this.element[i].y >= this.config.canvas.height - 3 * this.nave.height) {
           this.game.showMessage(`You are dead`);
           window.location.reload();
           return false;
@@ -164,7 +160,7 @@ export class Enemies {
   move() {
     this.moveX(true, 800);
     //First speed level is 8000
-    this.moveY(8000 * Number(this.config.level?.textContent));
+    this.moveY(8000 * Number(this.config.level));
   }
 
   //Check if a enemy in array is colision with a fire
