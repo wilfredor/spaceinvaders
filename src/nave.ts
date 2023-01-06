@@ -1,3 +1,4 @@
+import { Colision } from "./colision";
 import { Config } from "./config";
 import { Game } from "./game";
 import { Tool } from "./tools";
@@ -40,7 +41,9 @@ export class Nave {
         if (y >= -Config.fireHeight) {//If the fire is in screen border	
           Tool.paintFire(x,y);
           //if some enemy the fire stop
-          if (this.game.enemies.checkColision(x, y, 7, 12)) {
+          const enemyIndex = Colision.checkColision(x, y, 7, 12,this.game.enemies.items);
+          if (enemyIndex!==-1) {
+            this.game.enemies.remove(enemyIndex);
             y = -5;
             this.game.enemies.paint();
           }

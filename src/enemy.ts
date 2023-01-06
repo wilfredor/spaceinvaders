@@ -27,10 +27,10 @@ export class Enemy {
    }
 
    Obstruction() {
-      const elementNumber = this.enemies.element.length - 1;
+      const elementNumber = this.enemies.items.length - 1;
       for (var i = 0; i <= elementNumber; i++) {
-         if ((this.enemies.element[i].x == this.x) && 
-             (this.enemies.element[i].index > this.index))
+         if ((this.enemies.items[i].x == this.x) && 
+             (this.enemies.items[i].index > this.index))
             return true;
       }
       return false;

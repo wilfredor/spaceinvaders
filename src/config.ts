@@ -11,4 +11,5 @@ export class Config {
     static naveMaxshots = 3;
     static firstSpeedLevel = 8000;
     static fireHeight = 20;
+    static enemyFireSpeed = 1000;
 }
