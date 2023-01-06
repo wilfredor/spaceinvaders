@@ -1,8 +1,15 @@
-import { Config } from "./config";
+
 import { Enemy } from "./enemy";
 import { Game } from "./game";
-import { Nave } from "./nave";
+import { IGame } from "./modele/igame";
 import { Tool } from "./tools";
+
+type Bounds = {
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+};
 
 export class Enemies {
   x!: number;
@@ -11,24 +18,20 @@ export class Enemies {
   height!: number;
   element!: any[];
   enemiesType!: HTMLImageElement[];
-  nave: Nave;
   game: Game;
-  config: Config;
 
-  constructor(game: Game, nave: Nave, config: Config) {
-    this.config = config;
-    this.reset();
-    this.nave = nave;
+  constructor(x:number, y:number, game: Game) {
     this.game = game;
+    this.x = x;
+    this.y = y;
+    this.width = game.config.enemyWidth;
+    this.height = game.config.enemyHeight;
+    this.reset();
     this.initEnemies();
     this.move();
   }
 
   reset() {
-    this.x = 0;
-    this.y = 0;
-    this.width = 30;
-    this.height = 30;
     this.element = [];
     this.enemiesType = [];
   }
@@ -36,21 +39,21 @@ export class Enemies {
   removeEnemies() {
     //Clean place
     //9 is the canon height
-    this.config.context.clearRect(0, 
+    this.game.config.context.clearRect(0, 
                                   0, 
-                                  this.config.canvas.width, 
-                                  this.config.canvas.height - (this.nave.height + 9));
+                                  this.game.config.canvas.width, 
+                                  this.game.config.canvas.height - (this.game.nave.height + 9));
   }
 
   //Remove a enemy bi index in enemies array
   remove(index: number) {
     this.element?.splice(index, 1);
-    this.config.score++;
+    this.game.config.score++;
 
     if (this.element?.length === 0) {
       this.game.showMessage(`You win`);
       this.removeEnemies();
-      this.config.level++;
+      this.game.config.level++;
 
       //Init enemies array
       this.reset();
@@ -68,9 +71,9 @@ export class Enemies {
   
     // Create a new enemy element and add to enemies array.
     let index = 0;
-    const screenBorderWidth = this.config.canvas.width - this.width;
+    const screenBorderWidth = this.game.config.canvas.width - this.width;
     const step = this.width * 2;
-    const screenBorderHeight = this.config.canvas.height - this.height;
+    const screenBorderHeight = this.game.config.canvas.height - this.height;
     for (let i = this.x + this.width; i <= screenBorderWidth; i += step) {
       let enemyType = 0;
       for (
@@ -78,7 +81,7 @@ export class Enemies {
         j <= screenBorderHeight / 2 + screenBorderHeight / 6;
         j += this.height * 2
       ) {
-        const enemyElement = new Enemy(i, j, index, enemiesType[enemyType], this);
+        const enemyElement = new Enemy(i, j, index, enemiesType[enemyType], this.game);
         this.element.push(enemyElement);
         index++;
         if (enemyType < enemiesType.length - 1) {
@@ -115,7 +118,7 @@ export class Enemies {
         this.element[i].paint(); // Repaint enemies in new x, y.
   
         // If enemy is in nave area.
-        if (this.element[i].y >= this.config.canvas.height - 3 * this.nave.height) {
+        if (this.element[i].y >= this.game.config.canvas.height - 3 * this.game.nave.height) {
           this.game.showMessage(`You are dead`);
           window.location.reload();
           return false;
@@ -159,45 +162,48 @@ export class Enemies {
   //move enemies Vertically and Horizontally in the screen
   move() {
     this.moveX(true, 800);
-    //First speed level is 8000
-    this.moveY(8000 * Number(this.config.level));
+    this.moveY(this.game.config.firstSpeedLevel * this.game.config.level);
   }
 
   //Check if a enemy in array is colision with a fire
-   checkColision(
+  checkColision(
     x: number,
     y: number,
     width: number,
     height: number
   ): boolean {
-    const x1Fire = x;
-    const y1Fire = y;
-    const x2Fire = x + width;
-    const y2Fire = y + height;
+    const fireBounds = {
+      x1: x,
+      y1: y,
+      x2: x + width,
+      y2: y + height,
+    };
     const elementsNumber = this.element.length;
     for (let i = 0; i <= elementsNumber; i++) {
       if (this.element[i]) {
-        const x1Enemy = this.element[i].x;
-        const y1Enemy = this.element[i].y;
-        const x2Enemy = this.element[i].x + this.element[i].width;
-        const y2Enemy = this.element[i].y + this.element[i].height;
-        // Check colision areas.
-        if (
-          (y2Enemy <= y2Fire && y2Enemy >= y1Fire) ||
-          (y1Enemy >= y1Fire && y1Enemy <= y2Fire)
-        ) {
-          if (
-            (x1Fire >= x1Enemy && x1Fire <= x2Enemy) ||
-            (x2Fire <= x2Enemy && x2Fire >= x1Enemy)
-          ) {
-            console.log(`killed ${i}`);
-            this.remove(i);
-            return true;
-          }
+        const enemyBounds = {
+          x1: this.element[i].x,
+          y1: this.element[i].y,
+          x2: this.element[i].x + this.element[i].width,
+          y2: this.element[i].y + this.element[i].height,
+        };
+        if (this.checkVerticalCollision(fireBounds, enemyBounds) && 
+            this.checkHorizontalCollision(fireBounds, enemyBounds)) {
+          console.log(`killed ${i}`);
+          this.remove(i);
+          return true;
         }
       }
     }
     return false;
+  }
+  
+  private checkVerticalCollision(bounds1: Bounds, bounds2: Bounds): boolean {
+    return bounds2.y2 <= bounds1.y2 && bounds2.y2 >= bounds1.y1 || bounds1.y1 >= bounds2.y1 && bounds1.y1 <= bounds2.y2;
+  }
+  
+  private checkHorizontalCollision(bounds1: Bounds, bounds2: Bounds): boolean {
+    return bounds1.x1 >= bounds2.x1 && bounds1.x1 <= bounds2.x2 || bounds2.x2 <= bounds1.x2 && bounds2.x2 >= bounds1.x1;
   }
   
 };
