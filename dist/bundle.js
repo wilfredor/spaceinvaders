@@ -10,73 +10,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Config = void 0;
 var Config = /** @class */ (function () {
     function Config() {
-        this.enemyWidth = 30;
-        this.enemyHeight = 30;
-        this.naveWidth = 50;
-        this.naveHeight = 20;
-        this.naveLife = 3;
-        this.naveShots = 0;
-        this.naveMaxshots = 3;
-        this.firstSpeedLevel = 8000;
-        this.canvas = document.createElement('canvas');
-        this.context = this.canvas.getContext("2d");
-        this.game = document.getElementById('game');
-        this.canvas.setAttribute('width', '800');
-        this.canvas.setAttribute('height', '500');
-        this.game.appendChild(this.canvas);
-        this.level = 1;
-        this.score = 0;
-        this.life = 3;
     }
-    Object.defineProperty(Config.prototype, "mouseX", {
-        get: function () {
-            return this._mouseX;
-        },
-        set: function (value) {
-            this._mouseX = value;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Config.prototype, "level", {
-        get: function () {
-            return this._level;
-        },
-        set: function (level) {
-            this._level = level;
-            this.setLabel('level', String(level));
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Config.prototype, "life", {
-        get: function () {
-            return this._life;
-        },
-        set: function (life) {
-            this._life = life;
-            this.setLabel('life', String(life));
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Config.prototype, "score", {
-        get: function () {
-            return this._score;
-        },
-        set: function (score) {
-            this._score = score;
-            this.setLabel('score', String(score));
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Config.prototype.setLabel = function (id, textContent) {
-        var label = document.getElementById(id);
-        if (label !== null) {
-            label.textContent = textContent;
-        }
-    };
+    var _a;
+    _a = Config;
+    Config.canvas = document.getElementsByTagName("canvas")[0];
+    Config.context = _a.canvas.getContext("2d");
+    Config.game = document.getElementById('game');
+    Config.enemyWidth = 30;
+    Config.enemyHeight = 30;
+    Config.naveWidth = 50;
+    Config.naveHeight = 20;
+    Config.naveLife = 3;
+    Config.naveShots = 0;
+    Config.naveMaxshots = 3;
+    Config.firstSpeedLevel = 8000;
+    Config.fireHeight = 20;
     return Config;
 }());
 exports.Config = Config;
@@ -90,15 +38,14 @@ exports.Config = Config;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Enemies = void 0;
+var config_1 = __webpack_require__(913);
 var enemy_1 = __webpack_require__(624);
 var tools_1 = __webpack_require__(594);
 var Enemies = /** @class */ (function () {
-    function Enemies(x, y, game) {
+    function Enemies(game) {
         this.game = game;
-        this.x = x;
-        this.y = y;
-        this.width = game.config.enemyWidth;
-        this.height = game.config.enemyHeight;
+        this.x = 0;
+        this.y = 0;
         this.reset();
         this.initEnemies();
         this.move();
@@ -110,17 +57,17 @@ var Enemies = /** @class */ (function () {
     Enemies.prototype.removeEnemies = function () {
         //Clean place
         //9 is the canon height
-        this.game.config.context.clearRect(0, 0, this.game.config.canvas.width, this.game.config.canvas.height - (this.game.nave.height + 9));
+        config_1.Config.context.clearRect(0, 0, config_1.Config.canvas.width, config_1.Config.canvas.height - (config_1.Config.naveHeight + 9));
     };
     //Remove a enemy bi index in enemies array
     Enemies.prototype.remove = function (index) {
         var _a, _b;
         (_a = this.element) === null || _a === void 0 ? void 0 : _a.splice(index, 1);
-        this.game.config.score++;
+        this.game.score++;
         if (((_b = this.element) === null || _b === void 0 ? void 0 : _b.length) === 0) {
             this.game.showMessage("You win");
             this.removeEnemies();
-            this.game.config.level++;
+            this.game.level++;
             //Init enemies array
             this.reset();
         }
@@ -134,12 +81,12 @@ var Enemies = /** @class */ (function () {
         }
         // Create a new enemy element and add to enemies array.
         var index = 0;
-        var screenBorderWidth = this.game.config.canvas.width - this.width;
-        var step = this.width * 2;
-        var screenBorderHeight = this.game.config.canvas.height - this.height;
-        for (var i = this.x + this.width; i <= screenBorderWidth; i += step) {
+        var screenBorderWidth = config_1.Config.canvas.width - config_1.Config.enemyWidth;
+        var step = config_1.Config.enemyWidth * 2;
+        var screenBorderHeight = config_1.Config.canvas.height - config_1.Config.enemyHeight;
+        for (var i = this.x + config_1.Config.enemyWidth; i <= screenBorderWidth; i += step) {
             var enemyType = 0;
-            for (var j = this.y; j <= screenBorderHeight / 2 + screenBorderHeight / 6; j += this.height * 2) {
+            for (var j = this.y; j <= screenBorderHeight / 2 + screenBorderHeight / 6; j += config_1.Config.enemyHeight * 2) {
                 var enemyElement = new enemy_1.Enemy(i, j, index, enemiesType[enemyType], this.game);
                 this.element.push(enemyElement);
                 index++;
@@ -170,11 +117,11 @@ var Enemies = /** @class */ (function () {
                 }
                 else {
                     // Else if move is vertically and step is 5.
-                    this.element[i].y += this.height / 5;
+                    this.element[i].y += config_1.Config.enemyHeight / 5;
                 }
                 this.element[i].paint(); // Repaint enemies in new x, y.
                 // If enemy is in nave area.
-                if (this.element[i].y >= this.game.config.canvas.height - 3 * this.game.nave.height) {
+                if (this.element[i].y >= config_1.Config.canvas.height - 3 * config_1.Config.naveHeight) {
                     this.game.showMessage("You are dead");
                     window.location.reload();
                     return false;
@@ -218,7 +165,7 @@ var Enemies = /** @class */ (function () {
     //move enemies Vertically and Horizontally in the screen
     Enemies.prototype.move = function () {
         this.moveX(true, 800);
-        this.moveY(this.game.config.firstSpeedLevel * this.game.config.level);
+        this.moveY(config_1.Config.firstSpeedLevel * this.game.level);
     };
     //Check if a enemy in array is colision with a fire
     Enemies.prototype.checkColision = function (x, y, width, height) {
@@ -237,6 +184,7 @@ var Enemies = /** @class */ (function () {
                     x2: this.element[i].x + this.element[i].width,
                     y2: this.element[i].y + this.element[i].height,
                 };
+                console.log(fireBounds, enemyBounds);
                 if (this.checkVerticalCollision(fireBounds, enemyBounds) &&
                     this.checkHorizontalCollision(fireBounds, enemyBounds)) {
                     console.log("killed ".concat(i));
@@ -262,15 +210,16 @@ exports.Enemies = Enemies;
 /***/ }),
 
 /***/ 624:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Enemy = void 0;
+var config_1 = __webpack_require__(913);
 var Enemy = /** @class */ (function () {
     function Enemy(x, y, index, enemyType, game) {
-        this.width = game.config.enemyWidth;
-        this.height = game.config.enemyHeight;
+        this.width = config_1.Config.enemyWidth;
+        this.height = config_1.Config.enemyHeight;
         this.x = x;
         this.y = y;
         this.index = index;
@@ -279,7 +228,7 @@ var Enemy = /** @class */ (function () {
         this.paint();
     }
     Enemy.prototype.paint = function () {
-        this.game.config.context.drawImage(this.img, this.x, this.y, this.width, this.height);
+        config_1.Config.context.drawImage(this.img, this.x, this.y, config_1.Config.enemyWidth, config_1.Config.enemyHeight);
     };
     Enemy.prototype.Obstruction = function () {
         var elementNumber = this.game.enemies.element.length - 1;
@@ -309,15 +258,15 @@ var Enemy = /** @class */ (function () {
     Enemy.prototype.directionFire = function (xPos, i) {
         var _this = this;
         setTimeout(function () {
-            if (i <= _this.game.config.canvas.height - 20) { //If the fire is not in screen border	
+            if (i <= config_1.Config.canvas.height - 20) { //If the fire is not in screen border	
                 //Make a fire and delete track
-                _this._makefire(_this.game.config.context, i, xPos);
+                _this._makefire(config_1.Config.context, i, xPos);
                 //the fire resume trayectory
                 _this.directionFire(xPos, i + 20);
             }
-            else if ((xPos >= _this.game.nave.x) && (xPos <= (_this.game.nave.x + _this.width))) {
+            else if ((xPos >= _this.game.nave.x) && (xPos <= (_this.game.nave.x + config_1.Config.enemyWidth))) {
                 _this.game.nave.life--;
-                _this.game.config.life = _this.game.nave.life;
+                _this.game.life = _this.game.nave.life;
                 if (_this.game.nave.life <= 0) {
                     _this.game.showMessage("You are dead");
                     _this.game.reload();
@@ -327,7 +276,7 @@ var Enemy = /** @class */ (function () {
                 }
             }
             else
-                _this.game.config.context.clearRect(xPos, i - 20, 3, 9);
+                config_1.Config.context.clearRect(xPos, i - 20, 3, 9);
         }, 30);
     };
     ;
@@ -339,26 +288,29 @@ exports.Enemy = Enemy;
 /***/ }),
 
 /***/ 769:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Game = void 0;
+var config_1 = __webpack_require__(913);
 var Game = /** @class */ (function () {
-    function Game(config) {
-        this._config = config;
+    function Game() {
+        this.level = 1;
+        this.score = 0;
+        this.life = 3;
     }
     Game.prototype.showMessage = function (messageContent) {
         var _this = this;
         this._paused = true;
         // window.enemies.removeEnemies();
-        var x = this._config.canvas.width / 2; //Center text in canvas 
-        var y = this._config.canvas.height / 2;
-        this._config.context.font = "30px Courier New";
-        this._config.context.fillStyle = 'white';
-        this._config.context.fill();
-        this._config.context.textAlign = 'center';
-        this._config.context.fillText(messageContent, x, y);
+        var x = config_1.Config.canvas.width / 2; //Center text in canvas 
+        var y = config_1.Config.canvas.height / 2;
+        config_1.Config.context.font = "30px Courier New";
+        config_1.Config.context.fillStyle = 'white';
+        config_1.Config.context.fill();
+        config_1.Config.context.textAlign = 'center';
+        config_1.Config.context.fillText(messageContent, x, y);
         if (messageContent != "Pause") {
             setTimeout(function () {
                 _this._paused = false;
@@ -386,16 +338,6 @@ var Game = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
-    Object.defineProperty(Game.prototype, "config", {
-        get: function () {
-            return this._config;
-        },
-        set: function (config) {
-            this._config = config;
-        },
-        enumerable: false,
-        configurable: true
-    });
     Object.defineProperty(Game.prototype, "enemies", {
         get: function () {
             return this._enemies;
@@ -416,6 +358,55 @@ var Game = /** @class */ (function () {
         enumerable: false,
         configurable: true
     });
+    Object.defineProperty(Game.prototype, "level", {
+        get: function () {
+            return this._level;
+        },
+        set: function (level) {
+            this._level = level;
+            this.setLabel('level', String(level));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Game.prototype, "life", {
+        get: function () {
+            return this._life;
+        },
+        set: function (life) {
+            this._life = life;
+            this.setLabel('life', String(life));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Game.prototype, "score", {
+        get: function () {
+            return this._score;
+        },
+        set: function (score) {
+            this._score = score;
+            this.setLabel('score', String(score));
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Game.prototype.setLabel = function (id, textContent) {
+        var label = document.getElementById(id);
+        if (label !== null) {
+            label.textContent = textContent;
+        }
+    };
+    Object.defineProperty(Game.prototype, "mouseX", {
+        get: function () {
+            return this._mouseX;
+        },
+        set: function (value) {
+            this._mouseX = value;
+        },
+        enumerable: false,
+        configurable: true
+    });
     return Game;
 }());
 exports.Game = Game;
@@ -425,21 +416,20 @@ exports.Game = Game;
 /***/ }),
 
 /***/ 861:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Nave = void 0;
+var config_1 = __webpack_require__(913);
+var tools_1 = __webpack_require__(594);
 var Nave = /** @class */ (function () {
-    function Nave(x, game) {
+    function Nave(game) {
         var _this = this;
-        this.width = game.config.naveWidth;
-        this.height = game.config.naveHeight;
-        this.shots = game.config.naveShots;
-        this.maxshots = game.config.naveMaxshots;
-        this.x = x;
-        this.life = game.config.naveLife;
-        this.y = game.config.canvas.height - this.height;
+        this.shots = config_1.Config.naveShots;
+        this.x = 0;
+        this.life = config_1.Config.naveLife;
+        this.y = config_1.Config.canvas.height - config_1.Config.naveHeight;
         this.game = game;
         this.paint();
         window.onkeydown = function (event) { _this.move(event); };
@@ -448,54 +438,43 @@ var Nave = /** @class */ (function () {
     }
     Nave.prototype.fire = function () {
         if (!this.game.paused) {
-            if (this.shots <= this.maxshots) {
+            if (this.shots <= config_1.Config.naveMaxshots) {
                 this.shots++;
-                var xPos = this.x + 25;
-                var i = (this.game.config.canvas.height - 60);
-                this.directionFire(xPos, i);
+                this.directionFire(this.x + 25, config_1.Config.canvas.height - 60);
             }
         }
     };
-    Nave.prototype.directionFire = function (xPos, i) {
+    Nave.prototype.directionFire = function (x, y) {
         var _this = this;
-        if ((i <= -20))
+        if ((y <= -config_1.Config.fireHeight))
             this.shots = 0;
-        setTimeout(function () {
-            if (i >= -20) { //If the fire is in screen border	
-                //create fire and delete track
-                _this.game.config.context.clearRect(xPos, i + 20, 2, 12);
-                _this.game.config.context.fillRect(xPos, i, 2, 12);
-                //if some enemy the fire stop
-                if (_this.game.enemies.checkColision(xPos, i, 7, 12)) {
-                    i = -5;
-                    _this.game.enemies.paint();
-                    //this.shots=0;
+        else {
+            setTimeout(function () {
+                if (y >= -config_1.Config.fireHeight) { //If the fire is in screen border	
+                    tools_1.Tool.paintFire(x, y);
+                    //if some enemy the fire stop
+                    if (_this.game.enemies.checkColision(x, y, 7, 12)) {
+                        y = -5;
+                        _this.game.enemies.paint();
+                    }
+                    //Recursion, the shot is going
+                    _this.directionFire(x, y - config_1.Config.fireHeight);
                 }
-                //Recursion, the shot is going
-                _this.directionFire(xPos, i - 20);
-            }
-        }, 30);
+            }, 30);
+        }
     };
     Nave.prototype.paint = function () {
-        //paint nave in relative screen position
-        this.game.config.context.fillStyle = "#7fff00";
-        this.game.config.context.clearRect(0, this.game.config.canvas.height - (this.height + this.height / 2), this.game.config.canvas.width, this.game.config.canvas.height);
-        this.game.config.context.fillRect(this.x, this.y, this.width, this.height);
-        //Nave canon
-        this.game.config.context.fillRect(this.x + 24, this.game.config.canvas.height - 30, 3, 5);
-        this.game.config.context.clearRect(this.x - 4, this.game.config.canvas.height - 27, 7, 12);
-        this.game.config.context.fillRect(this.x + 22, this.game.config.canvas.height - 25, 7, 12);
-        this.game.config.context.clearRect(this.x + this.width - 3, this.game.config.canvas.height - 27, 7, 12);
+        tools_1.Tool.paintNave(this.x, this.y);
     };
     Nave.prototype.moveLeft = function (step) {
-        this.x -= this.width / step;
-        if (this.x <= (-this.width))
-            this.x = this.game.config.canvas.width - this.width;
+        this.x -= config_1.Config.naveWidth / step;
+        if (this.x <= (-config_1.Config.naveWidth))
+            this.x = config_1.Config.canvas.width - config_1.Config.naveWidth;
         this.paint();
     };
     Nave.prototype.moveRight = function (step) {
-        this.x += this.width / step;
-        if (this.x >= this.game.config.canvas.width)
+        this.x += config_1.Config.naveWidth / step;
+        if (this.x >= config_1.Config.canvas.width)
             this.x = 0;
         this.paint();
     };
@@ -517,16 +496,15 @@ var Nave = /** @class */ (function () {
     };
     Nave.prototype.handleMouseMovement = function (event) {
         var mouseXaux = event.clientX;
-        if (this.game.config.mouseX > mouseXaux) {
+        if (this.game.mouseX > mouseXaux) {
             this.moveLeft(5);
         }
-        else if (this.game.config.mouseX < mouseXaux) {
+        else if (this.game.mouseX < mouseXaux) {
             this.moveRight(5);
         }
-        this.game.config.mouseX = mouseXaux;
+        this.game.mouseX = mouseXaux;
     };
     Nave.prototype.handleKeyboardMovement = function (event) {
-        console.log(event.code);
         if (event.code === 'ArrowLeft') {
             this.moveLeft(2);
         }
@@ -546,11 +524,12 @@ exports.Nave = Nave;
 /***/ }),
 
 /***/ 594:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Tool = void 0;
+var config_1 = __webpack_require__(913);
 //Check if a var exist
 var Tool = /** @class */ (function () {
     function Tool() {
@@ -558,6 +537,21 @@ var Tool = /** @class */ (function () {
     //A random number multiple of 5
     Tool.randomRange = function (min, max) {
         return Math.round((Math.random() * (max - min) + min) / 5) * 5;
+    };
+    Tool.paintNave = function (x, y) {
+        //paint nave in relative screen position
+        config_1.Config.context.fillStyle = "#7fff00";
+        config_1.Config.context.clearRect(0, config_1.Config.canvas.height - (config_1.Config.naveHeight + config_1.Config.naveHeight / 2), config_1.Config.canvas.width, config_1.Config.canvas.height);
+        config_1.Config.context.fillRect(x, y, config_1.Config.naveWidth, config_1.Config.naveHeight);
+        //Nave canon
+        config_1.Config.context.fillRect(x + 24, config_1.Config.canvas.height - 30, 3, 5);
+        config_1.Config.context.clearRect(x - 4, config_1.Config.canvas.height - 27, 7, 12);
+        config_1.Config.context.fillRect(x + 22, config_1.Config.canvas.height - 25, 7, 12);
+        config_1.Config.context.clearRect(x + config_1.Config.naveWidth - 3, config_1.Config.canvas.height - 27, 7, 12);
+    };
+    Tool.paintFire = function (x, y) {
+        config_1.Config.context.clearRect(x, y + 20, 2, 12);
+        config_1.Config.context.fillRect(x, y, 2, 12);
     };
     return Tool;
 }());
@@ -600,14 +594,13 @@ var exports = __webpack_exports__;
 var __webpack_unused_export__;
 
 __webpack_unused_export__ = ({ value: true });
-var config_1 = __webpack_require__(913);
 var enemies_1 = __webpack_require__(749);
 var game_1 = __webpack_require__(769);
 var nave_1 = __webpack_require__(861);
 window.onload = function () {
-    var game = new game_1.Game(new config_1.Config());
-    game.enemies = new enemies_1.Enemies(0, 0, game);
-    game.nave = new nave_1.Nave(0, game);
+    var game = new game_1.Game();
+    game.enemies = new enemies_1.Enemies(game);
+    game.nave = new nave_1.Nave(game);
 };
 
 })();

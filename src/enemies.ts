@@ -1,7 +1,7 @@
 
+import { Config } from "./config";
 import { Enemy } from "./enemy";
 import { Game } from "./game";
-import { IGame } from "./modele/igame";
 import { Tool } from "./tools";
 
 type Bounds = {
@@ -14,18 +14,14 @@ type Bounds = {
 export class Enemies {
   x!: number;
   y!: number;
-  width!: number;
-  height!: number;
   element!: any[];
   enemiesType!: HTMLImageElement[];
   game: Game;
 
-  constructor(x:number, y:number, game: Game) {
+  constructor( game: Game) {
     this.game = game;
-    this.x = x;
-    this.y = y;
-    this.width = game.config.enemyWidth;
-    this.height = game.config.enemyHeight;
+    this.x = 0;
+    this.y = 0;
     this.reset();
     this.initEnemies();
     this.move();
@@ -36,24 +32,15 @@ export class Enemies {
     this.enemiesType = [];
   }
 
-  removeEnemies() {
-    //Clean place
-    //9 is the canon height
-    this.game.config.context.clearRect(0, 
-                                  0, 
-                                  this.game.config.canvas.width, 
-                                  this.game.config.canvas.height - (this.game.nave.height + 9));
-  }
-
   //Remove a enemy bi index in enemies array
   remove(index: number) {
     this.element?.splice(index, 1);
-    this.game.config.score++;
+    this.game.score++;
 
     if (this.element?.length === 0) {
       this.game.showMessage(`You win`);
-      this.removeEnemies();
-      this.game.config.level++;
+      Tool.removeEnemies();
+      this.game.level++;
 
       //Init enemies array
       this.reset();
@@ -71,17 +58,18 @@ export class Enemies {
   
     // Create a new enemy element and add to enemies array.
     let index = 0;
-    const screenBorderWidth = this.game.config.canvas.width - this.width;
-    const step = this.width * 2;
-    const screenBorderHeight = this.game.config.canvas.height - this.height;
-    for (let i = this.x + this.width; i <= screenBorderWidth; i += step) {
+    const screenBorderWidth = Config.canvas.width - Config.enemyWidth;
+    const screenBorderHeight = Config.canvas.height - Config.enemyHeight;
+
+    const step = Config.enemyWidth * 2;
+    for (let i = this.x + Config.enemyWidth; i <= screenBorderWidth; i += step) {
       let enemyType = 0;
       for (
         let j = this.y;
         j <= screenBorderHeight / 2 + screenBorderHeight / 6;
-        j += this.height * 2
+        j += Config.enemyHeight * 2
       ) {
-        const enemyElement = new Enemy(i, j, index, enemiesType[enemyType], this.game);
+        const enemyElement = new Enemy(i, j, index, enemiesType[enemyType],this);
         this.element.push(enemyElement);
         index++;
         if (enemyType < enemiesType.length - 1) {
@@ -96,7 +84,7 @@ export class Enemies {
 
   //paint all enemies
   paint() {
-    this.removeEnemies();
+    Tool.removeEnemies();
     for (var i = 0; i <= this.element.length - 1; i++)
       this.element[i].paint();
     return true;
@@ -105,7 +93,7 @@ export class Enemies {
   //move enemy elements  move elements enemies Horizontally and Vertically
   moveXY(moveLeft: boolean | null) {
     if (!this.game.paused) {
-      this.removeEnemies(); // Clean enemies for repaint.
+      Tool.removeEnemies(); // Clean enemies for repaint.
       const elementsNumber = this.element.length - 1;
       for (let i = 0; i <= elementsNumber; i++) {
         if (moveLeft !== null) {
@@ -113,12 +101,12 @@ export class Enemies {
           this.element[i].x += moveLeft ? -this.element[i].width : this.element[i].width;
         } else {
           // Else if move is vertically and step is 5.
-          this.element[i].y += this.height / 5;
+          this.element[i].y += Config.enemyHeight / 5;
         }
         this.element[i].paint(); // Repaint enemies in new x, y.
   
         // If enemy is in nave area.
-        if (this.element[i].y >= this.game.config.canvas.height - 3 * this.game.nave.height) {
+        if (this.element[i].y >= Config.canvas.height - 3 * Config.naveHeight) {
           this.game.showMessage(`You are dead`);
           window.location.reload();
           return false;
@@ -162,7 +150,7 @@ export class Enemies {
   //move enemies Vertically and Horizontally in the screen
   move() {
     this.moveX(true, 800);
-    this.moveY(this.game.config.firstSpeedLevel * this.game.config.level);
+    this.moveY(Config.firstSpeedLevel * this.game.level);
   }
 
   //Check if a enemy in array is colision with a fire
@@ -187,6 +175,7 @@ export class Enemies {
           x2: this.element[i].x + this.element[i].width,
           y2: this.element[i].y + this.element[i].height,
         };
+
         if (this.checkVerticalCollision(fireBounds, enemyBounds) && 
             this.checkHorizontalCollision(fireBounds, enemyBounds)) {
           console.log(`killed ${i}`);

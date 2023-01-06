@@ -1,31 +1,27 @@
-import { IConfig } from "./modele/iconfig";
-import { INave } from "./modele/inave";
-import { IEnemies } from "./modele/ienemies";
 import { Nave } from "./nave";
 import { Enemies } from "./enemies";
 import { Config } from "./config";
+import { Tool } from "./tools";
+
 export class Game {
   _paused!: boolean;
-  _config!: Config;
   _enemies!: Enemies;
   _nave!: Nave;
+  _mouseX!: number;
+  _level!: number;
+  _score!: number;
+  _life!: number;
 
-  constructor(config: Config ) {
-    this._config = config;
+  constructor() {
+    this.level = 1;
+    this.score = 0;
+    this.life = 3;
   }
 
   showMessage(messageContent: string) {
     this._paused = true;
-    // window.enemies.removeEnemies();
-    var x = this._config.canvas.width / 2; //Center text in canvas 
-    var y = this._config.canvas.height / 2;
 
-    this._config.context.font = "30px Courier New";
-    this._config.context.fillStyle = 'white';
-    this._config.context.fill();
-    this._config.context.textAlign = 'center';
-    this._config.context.fillText(messageContent, x, y);
-    
+    Tool.printMessage(messageContent);
 
     if (messageContent != "Pause") {
       setTimeout(() => {
@@ -54,12 +50,6 @@ export class Game {
   set paused(paused:boolean) {
     this._paused =paused;
   }
-  get config ():Config {
-    return this._config;
-  }
-  set config(config:Config) {
-    this._config =config;
-  }
   get enemies ():Enemies {
     return this._enemies;
   }
@@ -72,5 +62,40 @@ export class Game {
   set nave(nave:Nave) {
     this._nave =nave;
   }
+
+  public set level(level: number) {
+    this._level = level;
+    this.setLabel('level', String(level));
+}
+public get level() {
+    return this._level;
+}
+public set life(life: number) {
+    this._life = life;
+    this.setLabel('life', String(life));
+}
+public get life() {
+    return this._life;
+}
+public set score(score: number) {
+    this._score = score;
+    this.setLabel('score', String(score));
+}
+public get score() {
+    return this._score;
+}
+private setLabel(id: string, textContent: string) {
+    const label = document.getElementById(id);
+    if (label !== null) {
+        label.textContent = textContent;
+    }
+}
+
+public get mouseX(): number {
+  return this._mouseX;
+}
+public set mouseX(value: number) {
+  this._mouseX = value;
+}
 
 };
