@@ -11,7 +11,8 @@ export class HudRenderer {
     ctx.fillStyle = "rgba(0,0,0,0.7)";
     ctx.fillRect(0, 0, Config.canvas.width, h);
 
-    ctx.font = "14px Courier New";
+    const fontSize = Math.max(10, Math.round(Config.canvas.width / 38));
+    ctx.font = `${fontSize}px Courier New`;
     ctx.fillStyle = "#9fe29f";
     ctx.textBaseline = "middle";
     ctx.fillText(`LVL`, 10, h / 2);

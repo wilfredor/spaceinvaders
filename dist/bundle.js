@@ -1003,7 +1003,8 @@ var HudRenderer = /** @class */ (function () {
         ctx.clearRect(0, 0, config_1.Config.canvas.width, h);
         ctx.fillStyle = "rgba(0,0,0,0.7)";
         ctx.fillRect(0, 0, config_1.Config.canvas.width, h);
-        ctx.font = "14px Courier New";
+        var fontSize = Math.max(10, Math.round(config_1.Config.canvas.width / 38));
+        ctx.font = "".concat(fontSize, "px Courier New");
         ctx.fillStyle = "#9fe29f";
         ctx.textBaseline = "middle";
         ctx.fillText("LVL", 10, h / 2);
@@ -1527,13 +1528,26 @@ var Nave = /** @class */ (function () {
         window.onmouseup = function () { _this.stopAutoFire(); };
         window.onmouseleave = function () { _this.stopAutoFire(); };
         window.onmouseout = function () { _this.stopAutoFire(); };
-        window.ontouchstart = function (event) {
-            event.preventDefault();
-            _this.startAutoFire();
-        };
-        window.ontouchend = function () { _this.stopAutoFire(); };
-        window.ontouchcancel = function () { _this.stopAutoFire(); };
         window.onmousemove = function (event) { _this.move(event); };
+        window.addEventListener("touchstart", function (event) {
+            var _a;
+            event.preventDefault();
+            var x = (_a = event.touches[0]) === null || _a === void 0 ? void 0 : _a.clientX;
+            if (x !== undefined) {
+                _this.handleTouchMovement(x);
+            }
+            _this.startAutoFire();
+        }, { passive: false });
+        window.addEventListener("touchmove", function (event) {
+            var _a;
+            event.preventDefault();
+            var x = (_a = event.touches[0]) === null || _a === void 0 ? void 0 : _a.clientX;
+            if (x !== undefined) {
+                _this.handleTouchMovement(x);
+            }
+        }, { passive: false });
+        window.addEventListener("touchend", function () { _this.stopAutoFire(); }, { passive: true });
+        window.addEventListener("touchcancel", function () { _this.stopAutoFire(); }, { passive: true });
     }
     Nave.prototype.startAutoFire = function () {
         var _this = this;
@@ -1664,6 +1678,14 @@ var Nave = /** @class */ (function () {
             this.moveRight(5);
         }
         this.game.mouseX = mouseXaux;
+    };
+    Nave.prototype.handleTouchMovement = function (clientX) {
+        var rect = config_1.Config.canvas.getBoundingClientRect();
+        var relativeX = ((clientX - rect.left) / rect.width) * config_1.Config.canvas.width - config_1.Config.naveWidth / 2;
+        this.prevX = this.x;
+        this.x = Math.max(0, Math.min(config_1.Config.canvas.width - config_1.Config.naveWidth, relativeX));
+        this.game.mouseX = clientX;
+        this.paint();
     };
     Nave.prototype.handleKeyboardMovement = function (event) {
         if (event.code === 'ArrowLeft') {
