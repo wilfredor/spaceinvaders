@@ -1,9 +1,10 @@
 import { Nave } from "./nave";
 import { Enemies } from "./enemies";
 import { Config } from "./config";
-import { Tool } from "./tools";
+import { Services, services as defaultServices } from "./tools";
 
 export class Game {
+  private readonly services: Services;
   _paused!: boolean;
   _enemies!: Enemies;
   _nave!: Nave;
@@ -12,7 +13,8 @@ export class Game {
   _score!: number;
   _life!: number;
 
-  constructor() {
+  constructor(services: Services = defaultServices) {
+    this.services = services;
     this.level = 1;
     this.score = 0;
     this.life = 3;
@@ -21,7 +23,7 @@ export class Game {
   showMessage(messageContent: string) {
     this._paused = true;
 
-    Tool.printMessage(messageContent);
+    this.services.printMessage(messageContent);
 
     if (messageContent != "Pause") {
       setTimeout(() => {
@@ -81,16 +83,23 @@ public get level() {
 public get life() {
     return this._life;
 }
-public set score(score: number) {
+  public set score(score: number) {
     this._score = score;
     this.setLabel('score', String(score));
 }
 public get score() {
     return this._score;
 }
-private setLabel(id: string, textContent: string) {
-    Tool.drawHud(this._level, this._score, this._life);
+private setLabel(_id: string, _textContent: string) {
+    this.services.drawHud(this._level, this._score, this._life);
 }
+
+  update(deltaSeconds: number) {
+    if (this._paused) return;
+    if (this._enemies) {
+      this._enemies.update(deltaSeconds);
+    }
+  }
 
 public get mouseX(): number {
   return this._mouseX;
@@ -100,8 +109,8 @@ public set mouseX(value: number) {
 }
 
 private redraw() {
-  Tool.clearAll();
-  Tool.drawHud(this._level, this._score, this._life);
+  this.services.clearAll();
+  this.services.drawHud(this._level, this._score, this._life);
   if (this._enemies) {
     this._enemies.paint();
   }

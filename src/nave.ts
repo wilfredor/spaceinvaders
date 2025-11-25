@@ -1,7 +1,7 @@
 import { Colision } from "./colision";
 import { Config } from "./config";
 import { Game } from "./game";
-import { Tool } from "./tools";
+import { services as defaultServices, Services, Projectile } from "./tools";
 
 export class Nave {
   life: number;
@@ -11,9 +11,12 @@ export class Nave {
   game: Game;
   private flashTimeout?: number;
   private flashesRemaining = 0;
+  private readonly services: Services;
   constructor(
     game: Game,
+    services: Services = defaultServices,
   ) {
+    this.services = services;
     this.shots = Config.naveShots;
     this.x = 0;
     this.life = Config.naveLife;
@@ -28,8 +31,7 @@ export class Nave {
 
   fire(): void {
     if (!this.game.paused) {
-      // Re-sync shot counter with active projectiles.
-      this.shots = Tool.countProjectiles('player');
+      this.shots = this.services.countProjectiles('player');
       if (this.shots < Config.naveMaxshots) {
         this.shots++;
         this.directionFire(this.x + Config.naveWidth / 2 - 1.5, this.y - 10);
@@ -42,7 +44,7 @@ export class Nave {
     const height = 12;
     const speed = -500; // px/s upward
 
-    Tool.addProjectile({
+    this.services.addProjectile({
       x,
       y,
       vx: 0,
@@ -51,12 +53,12 @@ export class Nave {
       height,
       color: "#7fff00",
       owner: "player",
-      onStep: (p) => {
+      onStep: (p: Projectile) => {
         const enemyIndex = Colision.checkColision(p.x, p.y, width, height, this.game.enemies.items);
         if (enemyIndex !== -1) {
           const enemy = this.game.enemies.items[enemyIndex];
           if (enemy) {
-            Tool.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
+            this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
           }
           this.game.enemies.remove(enemyIndex);
           this.game.enemies.paint();
@@ -73,7 +75,7 @@ export class Nave {
   }
 
   paint() {
-      Tool.paintNave(this.x,this.y);
+      this.services.paintNave(this.x,this.y);
   }
 
   moveLeft(step: number) {
@@ -111,7 +113,7 @@ export class Nave {
         return;
       }
       const hitFrame = this.flashesRemaining % 2 === 0;
-      Tool.paintNave(this.x, this.y, hitFrame ? "#ff4d4d" : "#7fff00");
+      this.services.paintNave(this.x, this.y, hitFrame ? "#ff4d4d" : "#7fff00");
       this.flashesRemaining--;
       this.flashTimeout = window.setTimeout(blink, 80);
     };

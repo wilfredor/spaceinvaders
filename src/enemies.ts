@@ -1,16 +1,13 @@
-
 import { Config } from "./config";
 import { Enemy } from "./enemy";
 import { Game } from "./game";
-import { Tool } from "./tools";
+import { services as defaultServices, Services } from "./tools";
 
 export class Enemies {
   x!: number;
   y!: number;
   items!: Enemy[];
   game: Game;
-  private animationFrame?: number;
-  private lastFrameTime?: number;
   private horizontalDirection: 1 | -1 = 1;
   private horizontalSpeed = Config.enemyWidth * 1.6; // px/s, scales with enemy size
   private descentStep = Config.enemyHeight * 0.45;
@@ -19,22 +16,18 @@ export class Enemies {
   private formationOffsetY = 0;
   private attackAccumulator = 0;
   private nextAttackIn = 1.5;
+  private readonly services: Services;
 
-  constructor( game: Game) {
+  constructor( game: Game, services: Services = defaultServices) {
     this.game = game;
+    this.services = services;
     this.x = 0;
     this.y = 0;
     this.reset();
     this.initEnemies();
-    this.move();
   }
 
   reset() {
-    if (this.animationFrame) {
-      cancelAnimationFrame(this.animationFrame);
-      this.animationFrame = undefined;
-    }
-    this.lastFrameTime = undefined;
     this.formationOffsetX = 0;
     this.formationOffsetY = 0;
     this.attackAccumulator = 0;
@@ -48,12 +41,12 @@ export class Enemies {
 
     if (this.items?.length === 0) {
       this.game.showMessage(`You win`);
-      Tool.removeEnemies();
+      this.services.removeEnemies();
       this.game.level++;
 
       //Init next wave
       this.reset();
-      Tool.clearAll();
+      this.services.clearAll();
       this.initEnemies();
     }
   }
@@ -68,21 +61,20 @@ export class Enemies {
 
     const formationWidth = Config.enemyWidth + gapX * (columns - 1);
     const startX = Math.max(0, (Config.canvas.width - formationWidth) / 2);
-    const startY = Tool.hudHeight + Config.enemyHeight * 1.5;
+    const startY = this.services.hudHeight + Config.enemyHeight * 1.5;
 
     let index = 0;
     for (let col = 0; col < columns; col++) {
       for (let row = 0; row < rows; row++) {
-        const enemyType = Math.min(row, 2);
+        const enemyType = Math.min(Math.max(0, row), 2);
         const x = startX + col * gapX;
         const y = startY + row * gapY;
-        const enemyElement = new Enemy(x, y, index, enemyType, this);
+        const enemyElement = new Enemy(x, y, index, enemyType, this, this.services);
         this.items.push(enemyElement);
         index++;
       }
     }
     this.enemyFire(Config.enemyFireSpeed);
-    this.move();
   }
 
   private frontLineEnemies(): Enemy[] {
@@ -103,7 +95,7 @@ export class Enemies {
 
   //paint all enemies
   paint() {
-    Tool.removeEnemies();
+    this.services.removeEnemies();
     for (var i = 0; i <= this.items.length - 1; i++)
       this.items[i].paint();
     return true;
@@ -116,42 +108,17 @@ export class Enemies {
       if (this.items.length > 0) {
         // Choose a random enemy from the bottom-most row per column.
         const frontLine = this.frontLineEnemies();
-        const shooter = frontLine[Tool.randomRange(0, frontLine.length - 1)];
+        const shooter = frontLine[this.services.randomRange(0, frontLine.length - 1)];
         shooter?.fire();
       }
       this.enemyFire(speed);
     }, speed);
   }
 
-  //move enemies Vertically and Horizontally in the screen
-  move() {
-    if (this.animationFrame) {
-      cancelAnimationFrame(this.animationFrame);
-    }
-    this.lastFrameTime = undefined;
-    this.animationFrame = requestAnimationFrame(ts => this.tick(ts));
-  }
-
-  private tick(timestamp: number) {
-    if (this.lastFrameTime === undefined) {
-      this.lastFrameTime = timestamp;
-      this.animationFrame = requestAnimationFrame(ts => this.tick(ts));
-      return;
-    }
-
-    const deltaSeconds = (timestamp - this.lastFrameTime) / 1000;
-    this.lastFrameTime = timestamp;
-
-    if (!this.game.paused) {
-      this.advance(deltaSeconds);
-    }
-
-    this.animationFrame = requestAnimationFrame(ts => this.tick(ts));
-  }
-
-  private advance(deltaSeconds: number) {
+  update(deltaSeconds: number) {
+    if (this.game.paused) return;
     const moveX = this.horizontalDirection * this.horizontalSpeed * deltaSeconds;
-    const minYBeforeDescent = Tool.hudHeight + Config.enemyHeight * 0.5;
+    const minYBeforeDescent = this.services.hudHeight + Config.enemyHeight * 0.5;
     this.totalTime += deltaSeconds;
 
     // Check formation bounds based on base positions (ignore attackers' current x).
@@ -177,7 +144,7 @@ export class Enemies {
       this.nextAttackIn = 1 + Math.random() * 2;
     }
 
-    Tool.removeEnemies();
+    this.services.removeEnemies();
     for (let i = 0; i < this.items.length; i++) {
       const enemy = this.items[i];
       if (enemy.isInAttack()) {
@@ -197,13 +164,13 @@ export class Enemies {
         if (collidesWithNave) {
           Config.context.clearRect(enemy.x, enemy.y, enemy.width, enemy.height);
           enemy.resetPosition(this.formationOffsetX, this.formationOffsetY);
-          Tool.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
+          this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
           this.remove(enemy.index);
           nave.life--;
           this.game.life = nave.life;
           nave.flashHit();
           if (nave.life <= 0) {
-            Tool.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
+            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
             this.game.showMessage("You are dead");
             this.game.reload();
             return;
@@ -232,7 +199,7 @@ export class Enemies {
   private launchAttacker() {
     const frontLine = this.frontLineEnemies().filter(e => !e.isInAttack());
     if (frontLine.length === 0) return;
-    const shooter = frontLine[Tool.randomRange(0, frontLine.length - 1)];
+    const shooter = frontLine[this.services.randomRange(0, frontLine.length - 1)];
     const targetX = this.game.nave.x + Config.naveWidth / 2;
     const targetY = this.game.nave.y;
     shooter.startAttack(targetX, targetY);

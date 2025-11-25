@@ -1,8 +1,7 @@
-
 import { Config } from "./config";
 import { Enemies } from "./enemies";
 import { Game } from "./game";
-import { Tool } from "./tools";
+import { services as defaultServices, Services, Projectile } from "./tools";
 export class Enemy {
    x: number;
    y: number;
@@ -24,6 +23,7 @@ export class Enemy {
    private attackAmplitude = 0;
    private attackFrequency = 0;
    private color: string;
+   private readonly services: Services;
    private static frames: string[][][] = [
       // Classic invader shape: two-frame animation.
       [
@@ -101,7 +101,7 @@ export class Enemy {
     "#ff6b6b", // high
    ];
 
-   constructor(x: number, y: number, index: number, type: number, enemies:Enemies) {
+   constructor(x: number, y: number, index: number, type: number, enemies:Enemies, services: Services = defaultServices) {
       this.width = Config.enemyWidth;
       this.height = Config.enemyHeight;
       this.baseX = x;
@@ -109,11 +109,12 @@ export class Enemy {
       this.x = x;
       this.y = y;
       this.index = index;
-      this.type = Math.min(type, Enemy.frames.length - 1);
+      this.type = Math.min(Math.max(0, type), Enemy.frames.length - 1);
       this.color = Enemy.colors[this.type] ?? "#ffffff";
       this.enemies = enemies;
       this.animationSpeed = 1.5 + Math.random() * 1.5; // frames per second
       this.bobPhase = Math.random() * Math.PI * 2;
+      this.services = services;
       this.paint();
    }
 
@@ -155,14 +156,14 @@ export class Enemy {
       return this.isAttacking;
    }
 
-  stopAttack() { this.isAttacking = false; }
-  resetPosition(formationOffsetX: number, formationOffsetY: number) {
-     this.isAttacking = false;
-     this.x = this.baseX + formationOffsetX;
-     this.y = this.baseY + formationOffsetY;
-     this.attackTime = 0;
-     this.framePhase = 0;
-  }
+   stopAttack() { this.isAttacking = false; }
+   resetPosition(formationOffsetX: number, formationOffsetY: number) {
+      this.isAttacking = false;
+      this.x = this.baseX + formationOffsetX;
+      this.y = this.baseY + formationOffsetY;
+      this.attackTime = 0;
+      this.framePhase = 0;
+   }
 
    getColor(): string {
       return this.color;
@@ -192,7 +193,7 @@ export class Enemy {
               pixelWidth,
               pixelHeight
             );
-  }
+          }
         }
       }
    }
@@ -218,7 +219,7 @@ export class Enemy {
          const game = this.enemies.game;
          const nave = game.nave;
 
-         Tool.addProjectile({
+         this.services.addProjectile({
             x: startX,
             y: startY,
             vx: 0,
@@ -227,7 +228,7 @@ export class Enemy {
             height,
             color: "#ff4d4d",
             owner: "enemy",
-            onStep: (p) => {
+            onStep: (p: Projectile) => {
                const hitHorizontally = p.x + width >= nave.x && p.x <= nave.x + Config.naveWidth;
                const hitVertically = p.y + height >= nave.y && p.y <= nave.y + Config.naveHeight;
                if (hitHorizontally && hitVertically) {
