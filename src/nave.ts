@@ -8,6 +8,9 @@ export class Nave {
   shots: number;
   x: number;
   y: number;
+  private lastDrawX: number;
+  private lastDrawY: number;
+  private prevX: number;
   game: Game;
   private flashTimeout?: number;
   private flashesRemaining = 0;
@@ -19,8 +22,11 @@ export class Nave {
     this.services = services;
     this.shots = Config.naveShots;
     this.x = 0;
+    this.prevX = this.x;
+    this.lastDrawX = this.x;
+    this.lastDrawY = Config.canvas.height - Config.naveHeight;
     this.life = Config.naveLife;
-    this.y = Config.canvas.height - Config.naveHeight;
+    this.y = this.lastDrawY;
     this.game = game;
     this.paint();
     window.onkeydown = (event: KeyboardEvent) => { this.move(event); };
@@ -34,14 +40,16 @@ export class Nave {
       this.shots = this.services.countProjectiles('player');
       if (this.shots < Config.naveMaxshots) {
         this.shots++;
-        this.directionFire(this.x + Config.naveWidth / 2 - 1.5, this.y - 10);
+        const width = 3;
+        const height = 12;
+        const startX = this.x + (Config.naveWidth - width) / 2;
+        const startY = this.y - height;
+        this.directionFire(startX, startY, width, height);
       }
     }
   }
 
-  directionFire(x: number, y: number) {
-    const width = 3;
-    const height = 12;
+  directionFire(x: number, y: number, width: number, height: number) {
     const speed = -500; // px/s upward
 
     this.services.addProjectile({
@@ -75,10 +83,30 @@ export class Nave {
   }
 
   paint() {
-      this.services.paintNave(this.x,this.y);
+    const ctx = Config.context;
+    const bandMargin = 8;
+    // Wipe a horizontal band where the nave moves to guarantee no trails.
+    ctx.clearRect(
+      0,
+      this.y - bandMargin,
+      Config.canvas.width,
+      Config.naveHeight + bandMargin * 2 + 4
+    );
+    // Also clear the same band on the projectile layer in case a stale pixel landed there.
+    Config.projectileContext.clearRect(
+      0,
+      this.y - bandMargin,
+      Config.canvas.width,
+      Config.naveHeight + bandMargin * 2 + 4
+    );
+
+    this.lastDrawX = this.x;
+    this.lastDrawY = this.y;
+    this.services.paintNave(this.x, this.y);
   }
 
   moveLeft(step: number) {
+    this.prevX = this.x;
     this.x -= Config.naveWidth / step;
     if (this.x <= 0)
       this.x = 0;
@@ -86,6 +114,7 @@ export class Nave {
   }
 
   moveRight(step: number) {
+    this.prevX = this.x;
     this.x += Config.naveWidth / step;
     if (this.x + Config.naveWidth >= Config.canvas.width)
       this.x = Config.canvas.width - Config.naveWidth;
@@ -130,6 +159,7 @@ export class Nave {
   
   private handleMouseMovement(event: MouseEvent) {
     const mouseXaux = event.clientX;
+    this.prevX = this.x;
     if (this.game.mouseX > mouseXaux) {
       this.moveLeft(5);
     } else if (this.game.mouseX < mouseXaux) {
@@ -147,5 +177,9 @@ export class Nave {
       this.fire();
     }
   }
-  
+
+  get velocityX(): number {
+    return this.x - this.prevX;
+  }
+
 };

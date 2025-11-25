@@ -31,22 +31,53 @@ export class Tool implements Services {
 
   paintNave(x: number, y: number, color: string = "#7fff00") {
     const ctx = Config.context;
-    const clearHeight = Config.naveHeight * 2;
-    ctx.clearRect(0, Config.canvas.height - clearHeight, Config.canvas.width, clearHeight);
+    const pattern = [
+      "     ##     ",
+      "    ####    ",
+      "    ####    ",
+      " ########## ",
+      "############",
+      "############",
+      "############",
+      "############",
+    ];
+    const cols = pattern[0].length;
+    const rows = pattern.length;
+    // Keep sprite fully inside nave bounding box to avoid overdraw artifacts.
+    const pixel = Math.max(
+      2,
+      Math.floor(
+        Math.min(
+          Config.naveWidth / cols,
+          Config.naveHeight / rows
+        )
+      )
+    );
+    const drawWidth = pixel * cols;
+    const drawHeight = pixel * rows;
+    const offsetX = Math.floor(x + (Config.naveWidth - drawWidth) / 2);
+    const offsetY = Math.floor(y + (Config.naveHeight - drawHeight) / 2);
+    // Clear the bounding box of the nave to avoid trails.
+    ctx.clearRect(
+      x - 2,
+      y - 2,
+      Config.naveWidth + 4,
+      Config.naveHeight + 4
+    );
 
     ctx.fillStyle = color;
-    ctx.fillRect(x, y, Config.naveWidth, Config.naveHeight);
-
-    const turretWidth = Math.max(2, Config.naveWidth * 0.12);
-    const turretHeight = Math.max(4, Config.naveHeight * 0.75);
-    const turretX = x + (Config.naveWidth - turretWidth) / 2;
-    const turretY = y - turretHeight + Config.naveHeight * 0.2;
-    ctx.fillRect(turretX, turretY, turretWidth, turretHeight);
-
-    const cutoutWidth = Config.naveWidth * 0.15;
-    const cutoutHeight = Config.naveHeight * 0.5;
-    ctx.clearRect(x, y + Config.naveHeight - cutoutHeight, cutoutWidth, cutoutHeight);
-    ctx.clearRect(x + Config.naveWidth - cutoutWidth, y + Config.naveHeight - cutoutHeight, cutoutWidth, cutoutHeight);
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        if (pattern[row][col] !== " ") {
+          ctx.fillRect(
+            offsetX + col * pixel,
+            offsetY + row * pixel,
+            pixel,
+            pixel
+          );
+        }
+      }
+    }
   }
 
   printMessage(messageContent: string) {

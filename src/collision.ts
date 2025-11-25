@@ -25,6 +25,9 @@ export class CollisionSystem {
           p.y < e.y + e.height &&
           p.y + p.height > e.y
         );
+        if (this.game.shields.hit(p.x, p.y, p.width, p.height)) {
+          return false;
+        }
         if (hit !== -1) {
           const enemy = enemies[hit];
           this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
@@ -33,6 +36,9 @@ export class CollisionSystem {
           return false;
         }
       } else {
+        if (this.game.shields.hit(p.x, p.y, p.width, p.height)) {
+          return false;
+        }
         const nave = this.game.nave;
         const hit =
           p.x < nave.x + Config.naveWidth &&

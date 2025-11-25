@@ -2,6 +2,7 @@ import { Nave } from "./nave";
 import { Enemies } from "./enemies";
 import { Config } from "./config";
 import { Services, services as defaultServices } from "./tools";
+import { ShieldManager } from "./shields";
 
 export class Game {
   private readonly services: Services;
@@ -12,9 +13,11 @@ export class Game {
   _level!: number;
   _score!: number;
   _life!: number;
+  shields: ShieldManager;
 
   constructor(services: Services = defaultServices) {
     this.services = services;
+    this.shields = new ShieldManager();
     this.level = 1;
     this.score = 0;
     this.life = 3;
@@ -111,6 +114,7 @@ public set mouseX(value: number) {
 private redraw() {
   this.services.clearAll();
   this.services.drawHud(this._level, this._score, this._life);
+  this.shields.draw();
   if (this._enemies) {
     this._enemies.paint();
   }

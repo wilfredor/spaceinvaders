@@ -2,6 +2,7 @@ import { Config } from "./config";
 import { Enemies } from "./enemies";
 import { Game } from "./game";
 import { services as defaultServices, Services, Projectile } from "./tools";
+import { ShieldManager } from "./shields";
 export class Enemy {
    x: number;
    y: number;
@@ -131,12 +132,36 @@ export class Enemy {
       this.isAttacking = true;
    }
 
-   updateAttack(deltaSeconds: number, formationOffsetX: number, formationOffsetY: number): boolean {
-      if (!this.isAttacking) return false;
-      this.attackTime += deltaSeconds;
-      const wobble = Math.sin(this.attackTime * this.attackFrequency) * this.attackAmplitude * deltaSeconds;
-      this.x += this.vxAttack * deltaSeconds + wobble;
-      this.y += this.vyAttack * deltaSeconds + wobble * 0.2;
+  updateAttack(deltaSeconds: number, formationOffsetX: number, formationOffsetY: number, shields: ShieldManager): boolean {
+    if (!this.isAttacking) return false;
+    this.attackTime += deltaSeconds;
+    const wobble = Math.sin(this.attackTime * this.attackFrequency) * this.attackAmplitude * deltaSeconds;
+    const shieldTop = shields.getTop();
+    const shieldBottom = shields.getBottom();
+    const gapCenters = shields.getGapCenters();
+    if (this.y + this.height >= shieldTop - this.height && this.y <= shieldBottom + this.height) {
+      // Nudge horizontally toward the nearest gap to avoid crashing into shields.
+      const centerX = this.x + this.width / 2;
+      if (gapCenters.length > 0) {
+        const nearestGap = gapCenters.reduce((prev, curr) =>
+          Math.abs(curr - centerX) < Math.abs(prev - centerX) ? curr : prev
+        );
+        const steer = Math.sign(nearestGap - centerX);
+        const steerAccel = 140; // px/s^2 horizontal steering
+        this.vxAttack += steer * steerAccel * deltaSeconds;
+      }
+    }
+
+    const nextX = this.x + this.vxAttack * deltaSeconds + wobble;
+    const nextY = this.y + this.vyAttack * deltaSeconds + wobble * 0.2;
+
+    if (shields.collidesBody(nextX, nextY, this.width, this.height)) {
+      this.resetPosition(formationOffsetX, formationOffsetY);
+        return false;
+      }
+
+      this.x = nextX;
+      this.y = nextY;
       this.animate(deltaSeconds);
 
       const outOfBounds = this.y > Config.canvas.height + this.height || this.x < -this.width || this.x > Config.canvas.width + this.width;
@@ -170,12 +195,13 @@ export class Enemy {
    }
 
    animate(deltaSeconds: number) {
+      const frames = Enemy.frames[this.type] ?? Enemy.frames[0];
       this.framePhase += this.animationSpeed * deltaSeconds;
-      this.animationFrame = Math.floor(this.framePhase) % Enemy.frames[this.type].length;
+      this.animationFrame = Math.floor(this.framePhase) % frames.length;
    }
 
    paint() {
-      const frames = Enemy.frames[this.type];
+      const frames = Enemy.frames[this.type] ?? Enemy.frames[0];
       const frame = frames[this.animationFrame % frames.length];
       const pixelWidth = this.width / frame[0].length;
       const pixelHeight = this.height / frame.length;
@@ -226,7 +252,7 @@ export class Enemy {
             vy: speed,
             width,
             height,
-            color: "#ff4d4d",
+            color: this.color,
             owner: "enemy",
             onStep: (p: Projectile) => {
                const hitHorizontally = p.x + width >= nave.x && p.x <= nave.x + Config.naveWidth;

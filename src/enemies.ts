@@ -75,6 +75,8 @@ export class Enemies {
       }
     }
     this.enemyFire(Config.enemyFireSpeed);
+    // Initial paint so the formation is visible before the first update tick.
+    this.paint();
   }
 
   private frontLineEnemies(): Enemy[] {
@@ -96,6 +98,7 @@ export class Enemies {
   //paint all enemies
   paint() {
     this.services.removeEnemies();
+    this.game.shields.draw();
     for (var i = 0; i <= this.items.length - 1; i++)
       this.items[i].paint();
     return true;
@@ -108,7 +111,7 @@ export class Enemies {
       if (this.items.length > 0) {
         // Choose a random enemy from the bottom-most row per column.
         const frontLine = this.frontLineEnemies();
-        const shooter = frontLine[this.services.randomRange(0, frontLine.length - 1)];
+        const shooter = frontLine[Math.floor(Math.random() * frontLine.length)];
         shooter?.fire();
       }
       this.enemyFire(speed);
@@ -145,12 +148,13 @@ export class Enemies {
     }
 
     this.services.removeEnemies();
+    this.game.shields.draw();
     for (let i = 0; i < this.items.length; i++) {
       const enemy = this.items[i];
       if (enemy.isInAttack()) {
         // Clear previous position trail for attackers.
         Config.context.clearRect(enemy.x, enemy.y, enemy.width, enemy.height);
-        const stillAttacking = enemy.updateAttack(deltaSeconds, this.formationOffsetX, this.formationOffsetY);
+        const stillAttacking = enemy.updateAttack(deltaSeconds, this.formationOffsetX, this.formationOffsetY, this.game.shields);
         if (!stillAttacking) {
           // Skip painting this frame; will be drawn in formation next frame.
           continue;
@@ -199,8 +203,16 @@ export class Enemies {
   private launchAttacker() {
     const frontLine = this.frontLineEnemies().filter(e => !e.isInAttack());
     if (frontLine.length === 0) return;
-    const shooter = frontLine[this.services.randomRange(0, frontLine.length - 1)];
-    const targetX = this.game.nave.x + Config.naveWidth / 2;
+    const shooter = frontLine[Math.floor(Math.random() * frontLine.length)];
+    const gaps = this.game.shields.getGaps();
+    const predictedX = this.game.nave.x + Config.naveWidth / 2 + this.game.nave.velocityX * 0.5;
+    const clampedTarget = Math.max(0, Math.min(Config.canvas.width, predictedX));
+    let targetX = clampedTarget;
+    if (gaps.length > 0) {
+      targetX = gaps.reduce((prev, curr) =>
+        Math.abs(curr - clampedTarget) < Math.abs(prev - clampedTarget) ? curr : prev
+      );
+    }
     const targetY = this.game.nave.y;
     shooter.startAttack(targetX, targetY);
   }
