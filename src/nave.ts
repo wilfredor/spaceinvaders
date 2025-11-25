@@ -14,6 +14,7 @@ export class Nave {
   game: Game;
   private flashTimeout?: number;
   private flashesRemaining = 0;
+  private fireIntervalId?: number;
   private readonly services: Services;
   constructor(
     game: Game,
@@ -30,9 +31,31 @@ export class Nave {
     this.game = game;
     this.paint();
     window.onkeydown = (event: KeyboardEvent) => { this.move(event); };
-    window.onmousedown = () => { this.fire(); };
+    window.onmousedown = () => { this.startAutoFire(); };
+    window.onmouseup = () => { this.stopAutoFire(); };
+    window.onmouseleave = () => { this.stopAutoFire(); };
+    window.onmouseout = () => { this.stopAutoFire(); };
+    window.ontouchstart = (event: TouchEvent) => {
+      event.preventDefault();
+      this.startAutoFire();
+    };
+    window.ontouchend = () => { this.stopAutoFire(); };
+    window.ontouchcancel = () => { this.stopAutoFire(); };
     window.onmousemove = (event: MouseEvent) => { this.move(event); };
 
+  }
+
+  private startAutoFire() {
+    this.fire();
+    if (this.fireIntervalId !== undefined) return;
+    this.fireIntervalId = window.setInterval(() => this.fire(), 180);
+  }
+
+  private stopAutoFire() {
+    if (this.fireIntervalId !== undefined) {
+      clearInterval(this.fireIntervalId);
+      this.fireIntervalId = undefined;
+    }
   }
 
   fire(): void {
