@@ -7,9 +7,9 @@ export class Tool {
     static randomRange(min: number, max: number) {
         return Math.round((Math.random() * (max - min) + min) / 5) * 5;
     }
-    static paintNave(x:number,y:number) {
+    static paintNave(x:number,y:number, color: string = "#7fff00") {
         //paint nave in relative screen position
-        Config.context.fillStyle = "#7fff00";
+        Config.context.fillStyle = color;
         Config.context.clearRect(0, 
                                 Config.canvas.height - (Config.naveHeight + Config.naveHeight / 2), 
                                 Config.canvas.width, Config.canvas.height);
@@ -50,11 +50,10 @@ export class Tool {
            } else if ((x >= game.nave.x) && (x <= (game.nave.x + Config.enemyWidth))) {
                  game.nave.life--;
                  game.life = game.nave.life;
+                 game.nave.flashHit();
                  if (game.nave.life <= 0) {
                     game.showMessage("You are dead");
                     game.reload();
-                 } else if (game.nave.life===1) {
-                    alert(`You have only ${game.nave.life} life`);
                  }
            } else
               Config.context.clearRect(x, y - 20, 3, 9);

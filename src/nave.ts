@@ -9,6 +9,8 @@ export class Nave {
   x: number;
   y: number;
   game: Game;
+  private flashTimeout?: number;
+  private flashesRemaining = 0;
   constructor(
     game: Game,
   ) {
@@ -82,6 +84,26 @@ export class Nave {
         this.handleKeyboardMovement(event);
       }
     }
+  }
+
+  flashHit() {
+    this.flashesRemaining = 6;
+    const blink = () => {
+      if (this.flashesRemaining <= 0) {
+        this.flashTimeout = undefined;
+        this.paint();
+        return;
+      }
+      const hitFrame = this.flashesRemaining % 2 === 0;
+      Tool.paintNave(this.x, this.y, hitFrame ? "#ff4d4d" : "#7fff00");
+      this.flashesRemaining--;
+      this.flashTimeout = window.setTimeout(blink, 80);
+    };
+
+    if (this.flashTimeout) {
+      clearTimeout(this.flashTimeout);
+    }
+    blink();
   }
   
   private isPauseEvent(event: KeyboardEvent | MouseEvent): boolean {
