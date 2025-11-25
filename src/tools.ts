@@ -3,6 +3,7 @@ import { CanvasCleaner } from "./managers/canvasCleaner";
 import { ExplosionRenderer } from "./managers/explosionRenderer";
 import { HudRenderer } from "./managers/hudRenderer";
 import { Projectile, ProjectileManager } from "./managers/projectileManager";
+import { SoundManager } from "./managers/soundManager";
 
 export interface Services {
   readonly hudHeight: number;
@@ -16,6 +17,15 @@ export interface Services {
   drawHud(level: number, score: number, lives: number): void;
   clearAll(): void;
   explode(x: number, y: number, radius?: number, color?: string): void;
+  playShoot(owner: "player" | "enemy"): void;
+  playExplosion(): void;
+  playEnemyDestroyed(): void;
+  playPlayerDestroyed(): void;
+  playPauseSound(): void;
+  startIntroTheme(): void;
+  startGameOverTheme(): void;
+  stopMusic(): void;
+  unlockAudio(): void;
 }
 
 export class Tool implements Services {
@@ -24,6 +34,7 @@ export class Tool implements Services {
   private explosions = new ExplosionRenderer();
   private hud = new HudRenderer();
   private cleaner = new CanvasCleaner(this.hudHeight);
+  private sound = new SoundManager();
 
   randomRange(min: number, max: number) {
     return Math.round((Math.random() * (max - min) + min) / 5) * 5;
@@ -124,6 +135,43 @@ export class Tool implements Services {
 
   explode(x: number, y: number, radius: number = 30, color?: string) {
     this.explosions.trigger(x, y, radius, color);
+    this.sound.playExplosion();
+  }
+
+  playShoot(owner: "player" | "enemy") {
+    this.sound.playShoot(owner);
+  }
+
+  playExplosion() {
+    this.sound.playExplosion();
+  }
+
+  playEnemyDestroyed() {
+    this.sound.playEnemyDestroyed();
+  }
+
+  playPlayerDestroyed() {
+    this.sound.playPlayerDestroyed();
+  }
+
+  playPauseSound() {
+    this.sound.playPause();
+  }
+
+  startIntroTheme() {
+    this.sound.startIntroTheme();
+  }
+
+  startGameOverTheme() {
+    this.sound.startGameOverTheme();
+  }
+
+  stopMusic() {
+    this.sound.stopMusic();
+  }
+
+  unlockAudio() {
+    this.sound.unlock();
   }
 }
 

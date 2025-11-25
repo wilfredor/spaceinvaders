@@ -51,6 +51,8 @@ export class CollisionSystem {
           nave.flashHit();
           if (nave.life <= 0) {
             this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
+            this.services.playPlayerDestroyed();
+            this.services.startGameOverTheme();
             this.game.showMessage("You are dead");
             this.game.reload();
           }
@@ -71,20 +73,22 @@ export class CollisionSystem {
         enemy.x + enemy.width > nave.x &&
         enemy.y < nave.y + Config.naveHeight &&
         enemy.y + enemy.height > nave.y;
-      if (hit) {
-        this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
-        this.game.enemies.remove(enemy.index);
-        enemy.resetPosition(0, 0);
-        nave.life--;
-        this.game.life = nave.life;
-        nave.flashHit();
-        if (nave.life <= 0) {
-          this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
-          this.game.showMessage("You are dead");
-          this.game.reload();
-          return;
+        if (hit) {
+          this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
+          this.game.enemies.remove(enemy.index);
+          enemy.resetPosition(0, 0);
+          nave.life--;
+          this.game.life = nave.life;
+          nave.flashHit();
+          if (nave.life <= 0) {
+            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
+            this.services.playPlayerDestroyed();
+            this.services.startGameOverTheme();
+            this.game.showMessage("You are dead");
+            this.game.reload();
+            return;
+          }
         }
-      }
     }
   }
 }

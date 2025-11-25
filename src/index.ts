@@ -28,9 +28,23 @@ function sizeCanvases() {
     }
 }
 
+function attachAudioUnlock() {
+    const unlock = () => {
+        services.unlockAudio();
+        services.startIntroTheme();
+        window.removeEventListener("pointerdown", unlock);
+        window.removeEventListener("touchstart", unlock);
+        window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock, { once: true, passive: true });
+    window.addEventListener("touchstart", unlock, { once: true, passive: true });
+    window.addEventListener("keydown", unlock, { once: true });
+}
+
 window.onload = () => { 
     sizeCanvases();
     Config.init();
+    attachAudioUnlock();
     const game = new Game(services);
     game.enemies = new Enemies(game, services);
     game.nave = new Nave(game, services);

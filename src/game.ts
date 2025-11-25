@@ -44,6 +44,7 @@ export class Game {
 
   pause(pause: boolean) {
     if (pause) {
+      this.services.playPauseSound();
       this.showMessage("Pause");
     }
 

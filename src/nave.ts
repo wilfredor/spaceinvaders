@@ -46,6 +46,7 @@ export class Nave {
   }
 
   private startAutoFire() {
+    this.services.startIntroTheme();
     this.fire();
     if (this.fireIntervalId !== undefined) return;
     this.fireIntervalId = window.setInterval(() => this.fire(), 180);
@@ -67,6 +68,7 @@ export class Nave {
         const height = 12;
         const startX = this.x + (Config.naveWidth - width) / 2;
         const startY = this.y - height;
+        this.services.playShoot("player");
         this.directionFire(startX, startY, width, height);
       }
     }

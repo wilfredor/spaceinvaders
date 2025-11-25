@@ -38,6 +38,7 @@ export class Enemies {
   remove(index: number) {
     this.items?.splice(index, 1);
     this.game.score++;
+    this.services.playEnemyDestroyed();
 
     if (this.items?.length === 0) {
       this.game.showMessage(`You win`);
@@ -175,6 +176,8 @@ export class Enemies {
           nave.flashHit();
           if (nave.life <= 0) {
             this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
+            this.services.playPlayerDestroyed();
+            this.services.startGameOverTheme();
             this.game.showMessage("You are dead");
             this.game.reload();
             return;
@@ -191,6 +194,8 @@ export class Enemies {
       enemy.paint();
       if (!enemy.isInAttack() && enemy.y >= Config.canvas.height - 3 * Config.naveHeight) {
         this.game.showMessage(`You are dead`);
+        this.services.playPlayerDestroyed();
+        this.services.startGameOverTheme();
         window.location.reload();
         return;
       }

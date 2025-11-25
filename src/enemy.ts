@@ -249,6 +249,7 @@ export class Enemy {
          const speed = 250; // px/s downward
          const game = this.enemies.game;
          const nave = game.nave;
+         this.services.playShoot("enemy");
 
          this.services.addProjectile({
             x: startX,
@@ -267,6 +268,8 @@ export class Enemy {
                   game.life = nave.life;
                   nave.flashHit();
                   if (nave.life <= 0) {
+                     this.services.playPlayerDestroyed();
+                     this.services.startGameOverTheme();
                      game.showMessage("You are dead");
                      game.reload();
                   }

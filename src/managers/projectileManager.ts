@@ -70,8 +70,16 @@ export class ProjectileManager {
 
       if (keep) {
         alive.push(p);
+        ctx.save();
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = p.color;
         ctx.fillStyle = p.color;
+        const grad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + p.height);
+        grad.addColorStop(0, p.color);
+        grad.addColorStop(1, "white");
+        ctx.fillStyle = grad;
         ctx.fillRect(p.x, p.y, p.width, p.height);
+        ctx.restore();
       }
     }
 
