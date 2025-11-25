@@ -35,13 +35,24 @@ export class Nave {
     window.onmouseup = () => { this.stopAutoFire(); };
     window.onmouseleave = () => { this.stopAutoFire(); };
     window.onmouseout = () => { this.stopAutoFire(); };
-    window.ontouchstart = (event: TouchEvent) => {
-      event.preventDefault();
-      this.startAutoFire();
-    };
-    window.ontouchend = () => { this.stopAutoFire(); };
-    window.ontouchcancel = () => { this.stopAutoFire(); };
     window.onmousemove = (event: MouseEvent) => { this.move(event); };
+    window.addEventListener("touchstart", (event: TouchEvent) => {
+      event.preventDefault();
+      const x = event.touches[0]?.clientX;
+      if (x !== undefined) {
+        this.handleTouchMovement(x);
+      }
+      this.startAutoFire();
+    }, { passive: false });
+    window.addEventListener("touchmove", (event: TouchEvent) => {
+      event.preventDefault();
+      const x = event.touches[0]?.clientX;
+      if (x !== undefined) {
+        this.handleTouchMovement(x);
+      }
+    }, { passive: false });
+    window.addEventListener("touchend", () => { this.stopAutoFire(); }, { passive: true });
+    window.addEventListener("touchcancel", () => { this.stopAutoFire(); }, { passive: true });
 
   }
 
@@ -190,6 +201,15 @@ export class Nave {
       this.moveRight(5);
     } 
     this.game.mouseX = mouseXaux;
+  }
+
+  private handleTouchMovement(clientX: number) {
+    const rect = Config.canvas.getBoundingClientRect();
+    const relativeX = ((clientX - rect.left) / rect.width) * Config.canvas.width - Config.naveWidth / 2;
+    this.prevX = this.x;
+    this.x = Math.max(0, Math.min(Config.canvas.width - Config.naveWidth, relativeX));
+    this.game.mouseX = clientX;
+    this.paint();
   }
   
   private handleKeyboardMovement(event: KeyboardEvent) {
