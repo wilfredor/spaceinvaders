@@ -46,7 +46,6 @@ export class Nave {
   }
 
   private startAutoFire() {
-    this.services.startIntroTheme();
     this.fire();
     if (this.fireIntervalId !== undefined) return;
     this.fireIntervalId = window.setInterval(() => this.fire(), 180);

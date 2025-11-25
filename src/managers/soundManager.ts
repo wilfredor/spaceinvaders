@@ -5,6 +5,9 @@ export class SoundManager {
   private currentTheme: "intro" | "gameover" | null = null;
   private unlocked = false;
   private suspendedFallbackSet = false;
+  private pendingIntro = false;
+  private audioBuffer?: AudioBuffer;
+  private musicSource?: AudioBufferSourceNode;
 
   private ensureContext() {
     if (!this.unlocked) return;
@@ -42,6 +45,36 @@ export class SoundManager {
         }
       });
     }
+    if (this.pendingIntro) {
+      this.pendingIntro = false;
+      this.startIntroTheme();
+    }
+  }
+
+  private async loadMusicBuffer(url: string) {
+    this.ensureContext();
+    if (!this.ctx) return;
+    if (this.audioBuffer) return;
+    const res = await fetch(url);
+    const arr = await res.arrayBuffer();
+    this.audioBuffer = await this.ctx.decodeAudioData(arr);
+  }
+
+  private playMusicBuffer(loop: boolean = true) {
+    if (!this.ctx || !this.master || !this.audioBuffer) return;
+    if (this.musicSource) {
+      this.musicSource.stop();
+      this.musicSource.disconnect();
+    }
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.audioBuffer;
+    src.loop = loop;
+    const gain = this.ctx.createGain();
+    gain.gain.value = 0.35;
+    src.connect(gain);
+    gain.connect(this.master);
+    src.start();
+    this.musicSource = src;
   }
 
   playShoot(owner: "player" | "enemy") {
@@ -84,13 +117,24 @@ export class SoundManager {
     this.boop(440, 0.08, "sine", 0.15, false, 0);
   }
 
-  startIntroTheme() {
+  async startIntroTheme() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
+    if (!this.ctx) {
+      this.pendingIntro = true;
+      return;
+    }
     if (this.currentTheme === "intro") return;
     this.stopMusic();
     this.currentTheme = "intro";
+
+    try {
+      await this.loadMusicBuffer("/assets/music.mp3");
+      this.playMusicBuffer(true);
+      return;
+    } catch (e) {
+      console.warn("Falling back to synth theme:", e);
+    }
 
     const bpm = 92;
     const beatMs = 60_000 / bpm;
@@ -124,20 +168,31 @@ export class SoundManager {
       { f: 110.0, beats: 2 }, { f: 123.5, beats: 2 }, { f: 130.8, beats: 2 }, { f: 146.8, beats: 2 },
       { f: 164.8, beats: 2 }, { f: 146.8, beats: 2 }, { f: 130.8, beats: 2 }, { f: 110.0, beats: 2 },
     ];
-    const chords: number[][] = [
-      [392.0, 494.0, 587.3],   // G major
-      [293.7, 369.9, 440.0],   // D
-      [329.6, 392.0, 493.9],   // E minor
-      [261.6, 329.6, 392.0],   // C
-      [293.7, 349.2, 440.0],   // D
-      [329.6, 415.3, 493.9],   // E7-ish color
-      [220.0, 261.6, 329.6],   // A minor
-      [293.7, 369.9, 440.0],   // D
+    const progression: number[][][] = [
+      [
+        [392.0, 494.0, 587.3],   // G
+        [293.7, 369.9, 440.0],   // D
+        [329.6, 392.0, 493.9],   // Em
+        [261.6, 329.6, 392.0],   // C
+      ],
+      [
+        [293.7, 349.2, 440.0],   // D
+        [329.6, 415.3, 493.9],   // E7ish
+        [220.0, 261.6, 329.6],   // Am
+        [293.7, 369.9, 440.0],   // D
+      ],
+      [
+        [261.6, 329.6, 415.3],   // Cmaj7
+        [246.9, 311.1, 392.0],   // Bdim-ish
+        [293.7, 349.2, 440.0],   // D
+        [329.6, 392.0, 493.9],   // Em
+      ],
     ];
     let sopIdx = 0;
     let altoIdx = 0;
     let bassIdx = 0;
     let chordIdx = 0;
+    let blockIdx = 0;
 
     const playVoice = (note: Note, vol: number, type: OscillatorType, detune: number = 0) => {
       if (!this.ctx || !this.master) return;
@@ -168,9 +223,15 @@ export class SoundManager {
         bassIdx++;
       }
       if (sopIdx % 4 === 0) {
-        const chord = chords[chordIdx % chords.length];
-        chord.forEach((f, i) => playVoice({ f, beats: 2 }, 0.07 - i * 0.01, "triangle", i === 0 ? -4 : i === 2 ? 4 : 0));
+        const block = progression[blockIdx % progression.length];
+        const chord = block[chordIdx % block.length];
+        chord.forEach((f, i) =>
+          playVoice({ f, beats: 2 }, 0.07 - i * 0.01, "triangle", i === 0 ? -4 : i === 2 ? 4 : 0)
+        );
         chordIdx++;
+        if (chordIdx % block.length === 0) {
+          blockIdx++;
+        }
       }
       sopIdx++;
     }, beatMs);
