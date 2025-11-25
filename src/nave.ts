@@ -54,6 +54,10 @@ export class Nave {
       onStep: (p) => {
         const enemyIndex = Colision.checkColision(p.x, p.y, width, height, this.game.enemies.items);
         if (enemyIndex !== -1) {
+          const enemy = this.game.enemies.items[enemyIndex];
+          if (enemy) {
+            Tool.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
+          }
           this.game.enemies.remove(enemyIndex);
           this.game.enemies.paint();
           this.shots = Math.max(0, this.shots - 1);

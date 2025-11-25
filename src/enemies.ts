@@ -9,6 +9,16 @@ export class Enemies {
   y!: number;
   items!: Enemy[];
   game: Game;
+  private animationFrame?: number;
+  private lastFrameTime?: number;
+  private horizontalDirection: 1 | -1 = 1;
+  private horizontalSpeed = Config.enemyWidth * 1.6; // px/s, scales with enemy size
+  private descentStep = Config.enemyHeight * 0.45;
+  private totalTime = 0;
+  private formationOffsetX = 0;
+  private formationOffsetY = 0;
+  private attackAccumulator = 0;
+  private nextAttackIn = 1.5;
 
   constructor( game: Game) {
     this.game = game;
@@ -20,6 +30,14 @@ export class Enemies {
   }
 
   reset() {
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
+      this.animationFrame = undefined;
+    }
+    this.lastFrameTime = undefined;
+    this.formationOffsetX = 0;
+    this.formationOffsetY = 0;
+    this.attackAccumulator = 0;
     this.items = [];
   }
 
@@ -33,39 +51,54 @@ export class Enemies {
       Tool.removeEnemies();
       this.game.level++;
 
-      //Init enemies array
+      //Init next wave
       this.reset();
+      Tool.clearAll();
+      this.initEnemies();
     }
   }
 
    initEnemies(): void {
-    // Target roughly 6–8 columns and 4–5 rows like the classic layout.
-    const columns = Math.max(6, Math.round(Config.canvas.width / (Config.enemyWidth * 2.5)));
-    const rows = Math.max(4, Math.round(Config.canvas.height / (Config.enemyHeight * 6)));
+    // Arcade-like formation: 11 columns x 5 rows, centered.
+    const columns = 11;
+    const rows = 5;
 
-    const horizontalPadding = Config.enemyWidth;
-    const verticalPadding = Tool.hudHeight + Config.enemyHeight;
+    const gapX = Config.enemyWidth * 1.5;
+    const gapY = Config.enemyHeight * 1.6;
 
-    const availableWidth = Config.canvas.width - horizontalPadding * 2;
-    const availableHeight = Math.max(
-      Config.enemyHeight * rows,
-      Config.canvas.height * 0.5 - Tool.hudHeight
-    ); // keep them on top half, below HUD
-
-    const stepX = availableWidth / columns;
-    const stepY = availableHeight / rows;
+    const formationWidth = Config.enemyWidth + gapX * (columns - 1);
+    const startX = Math.max(0, (Config.canvas.width - formationWidth) / 2);
+    const startY = Tool.hudHeight + Config.enemyHeight * 1.5;
 
     let index = 0;
     for (let col = 0; col < columns; col++) {
-      for (let row = 0, enemyType = 0; row < rows; row++, enemyType = Math.min(enemyType + 1, 2)) {
-        const x = horizontalPadding + col * stepX;
-        const y = verticalPadding + row * stepY;
+      for (let row = 0; row < rows; row++) {
+        const enemyType = Math.min(row, 2);
+        const x = startX + col * gapX;
+        const y = startY + row * gapY;
         const enemyElement = new Enemy(x, y, index, enemyType, this);
         this.items.push(enemyElement);
         index++;
       }
     }
     this.enemyFire(Config.enemyFireSpeed);
+    this.move();
+  }
+
+  private frontLineEnemies(): Enemy[] {
+    const buckets = new Map<number, Enemy>();
+    const bucketSize = Config.enemyWidth * 1.5;
+
+    for (const enemy of this.items) {
+      if (enemy.isInAttack()) continue;
+      const bucket = Math.round(enemy.x / bucketSize);
+      const current = buckets.get(bucket);
+      if (!current || enemy.y > current.y) {
+        buckets.set(bucket, enemy);
+      }
+    }
+
+    return Array.from(buckets.values());
   }
 
   //paint all enemies
@@ -76,58 +109,15 @@ export class Enemies {
     return true;
   }
 
-  //move enemy elements  move elements enemies Horizontally and Vertically
-  moveXY(moveLeft: boolean | null) {
-    if (!this.game.paused) {
-      Tool.removeEnemies(); // Clean enemies for repaint.
-      const elementsNumber = this.items.length - 1;
-      for (let i = 0; i <= elementsNumber; i++) {
-        if (moveLeft !== null) {
-          // If move is horizontally.
-          this.items[i].x += moveLeft ? -this.items[i].width : this.items[i].width;
-        } else {
-          // Else if move is vertically and step is 5.
-          this.items[i].y += Config.enemyHeight / 5;
-        }
-        this.items[i].paint(); // Repaint enemies in new x, y.
-  
-        // If enemy is in nave area.
-        if (this.items[i].y >= Config.canvas.height - 3 * Config.naveHeight) {
-          this.game.showMessage(`You are dead`);
-          window.location.reload();
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-  //move elements enemies Horizontally
-  moveX(move_left: boolean, speed: number) {
-    setTimeout(() => {
-      if (this.moveXY(move_left)) {
-        move_left = (!this.game.paused) ? (!move_left) : (move_left); //If game is paused don't move Horizontally
-        this.moveX(move_left, speed);
-      }
-    },speed);
-  }
-
-  //move elements enemies Vertically
-  moveY(speed: number) {
-    setTimeout(() => {
-      //window.enemies.y+=window.enemies.height/5;
-      if (this.moveXY(null))
-        this.moveY(speed);
-    }, speed);
-  }
-
   //Run fire to a enemy
   enemyFire(speed: number) {
     //First enemy in last row
     setTimeout(() => {
-      //Any enemy in last row
-      var index = Tool.randomRange(0, this.items.length - 1);
-      if (this.items[index]) {
-        this.items[index].fire();
+      if (this.items.length > 0) {
+        // Choose a random enemy from the bottom-most row per column.
+        const frontLine = this.frontLineEnemies();
+        const shooter = frontLine[Tool.randomRange(0, frontLine.length - 1)];
+        shooter?.fire();
       }
       this.enemyFire(speed);
     }, speed);
@@ -135,7 +125,116 @@ export class Enemies {
 
   //move enemies Vertically and Horizontally in the screen
   move() {
-    this.moveX(true, 800);
-    this.moveY(Config.firstSpeedLevel * this.game.level);
+    if (this.animationFrame) {
+      cancelAnimationFrame(this.animationFrame);
+    }
+    this.lastFrameTime = undefined;
+    this.animationFrame = requestAnimationFrame(ts => this.tick(ts));
+  }
+
+  private tick(timestamp: number) {
+    if (this.lastFrameTime === undefined) {
+      this.lastFrameTime = timestamp;
+      this.animationFrame = requestAnimationFrame(ts => this.tick(ts));
+      return;
+    }
+
+    const deltaSeconds = (timestamp - this.lastFrameTime) / 1000;
+    this.lastFrameTime = timestamp;
+
+    if (!this.game.paused) {
+      this.advance(deltaSeconds);
+    }
+
+    this.animationFrame = requestAnimationFrame(ts => this.tick(ts));
+  }
+
+  private advance(deltaSeconds: number) {
+    const moveX = this.horizontalDirection * this.horizontalSpeed * deltaSeconds;
+    const minYBeforeDescent = Tool.hudHeight + Config.enemyHeight * 0.5;
+    this.totalTime += deltaSeconds;
+
+    // Check formation bounds based on base positions (ignore attackers' current x).
+    let minX = Infinity;
+    let maxX = -Infinity;
+    for (const enemy of this.items) {
+      minX = Math.min(minX, enemy.baseX + this.formationOffsetX);
+      maxX = Math.max(maxX, enemy.baseX + this.formationOffsetX + enemy.width);
+    }
+    const wouldHitLeft = minX + moveX < 0;
+    const wouldHitRight = maxX + moveX > Config.canvas.width;
+    if (wouldHitLeft || wouldHitRight) {
+      this.horizontalDirection = this.horizontalDirection === 1 ? -1 : 1;
+      this.formationOffsetY += this.descentStep;
+    } else {
+      this.formationOffsetX += moveX;
+    }
+
+    this.attackAccumulator += deltaSeconds;
+    if (this.attackAccumulator >= this.nextAttackIn) {
+      this.launchAttacker();
+      this.attackAccumulator = 0;
+      this.nextAttackIn = 1 + Math.random() * 2;
+    }
+
+    Tool.removeEnemies();
+    for (let i = 0; i < this.items.length; i++) {
+      const enemy = this.items[i];
+      if (enemy.isInAttack()) {
+        // Clear previous position trail for attackers.
+        Config.context.clearRect(enemy.x, enemy.y, enemy.width, enemy.height);
+        const stillAttacking = enemy.updateAttack(deltaSeconds, this.formationOffsetX, this.formationOffsetY);
+        if (!stillAttacking) {
+          // Skip painting this frame; will be drawn in formation next frame.
+          continue;
+        }
+        const nave = this.game.nave;
+        const collidesWithNave =
+          enemy.x < nave.x + Config.naveWidth &&
+          enemy.x + enemy.width > nave.x &&
+          enemy.y < nave.y + Config.naveHeight &&
+          enemy.y + enemy.height > nave.y;
+        if (collidesWithNave) {
+          Config.context.clearRect(enemy.x, enemy.y, enemy.width, enemy.height);
+          enemy.resetPosition(this.formationOffsetX, this.formationOffsetY);
+          Tool.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
+          this.remove(enemy.index);
+          nave.life--;
+          this.game.life = nave.life;
+          nave.flashHit();
+          if (nave.life <= 0) {
+            Tool.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
+            this.game.showMessage("You are dead");
+            this.game.reload();
+            return;
+          }
+          continue;
+        }
+      } else {
+        const wobble = Math.sin(this.totalTime * 2 + enemy.bobPhase) * (Config.enemyHeight * 0.12);
+        enemy.x = enemy.baseX + this.formationOffsetX;
+        enemy.y = Math.max(minYBeforeDescent, enemy.baseY + this.formationOffsetY + wobble);
+        enemy.animate(deltaSeconds);
+      }
+
+      enemy.paint();
+      if (!enemy.isInAttack() && enemy.y >= Config.canvas.height - 3 * Config.naveHeight) {
+        this.game.showMessage(`You are dead`);
+        window.location.reload();
+        return;
+      }
+      if (enemy.y < minYBeforeDescent) {
+        enemy.y = minYBeforeDescent;
+      }
+    }
+  }
+
+  private launchAttacker() {
+    const frontLine = this.frontLineEnemies().filter(e => !e.isInAttack());
+    if (frontLine.length === 0) return;
+    const shooter = frontLine[Tool.randomRange(0, frontLine.length - 1)];
+    const targetX = this.game.nave.x + Config.naveWidth / 2;
+    const targetY = this.game.nave.y;
+    shooter.startAttack(targetX, targetY);
   }
 };

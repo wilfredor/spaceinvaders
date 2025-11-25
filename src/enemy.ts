@@ -10,8 +10,20 @@ export class Enemy {
    enemies: Enemies;
    width: number;
    height: number;
+   baseX: number;
+   baseY: number;
+   bobPhase: number;
+   private framePhase = 0;
+   private animationSpeed: number;
    private type: number;
    private animationFrame = 0;
+   private isAttacking = false;
+   private attackTime = 0;
+   private vxAttack = 0;
+   private vyAttack = 0;
+   private attackAmplitude = 0;
+   private attackFrequency = 0;
+   private color: string;
    private static frames: string[][][] = [
       // Classic invader shape: two-frame animation.
       [
@@ -83,16 +95,82 @@ export class Enemy {
         ],
       ],
    ];
+   private static colors = [
+    "#8fffcf", // low danger
+    "#ffd166", // medium
+    "#ff6b6b", // high
+   ];
 
    constructor(x: number, y: number, index: number, type: number, enemies:Enemies) {
       this.width = Config.enemyWidth;
       this.height = Config.enemyHeight;
+      this.baseX = x;
+      this.baseY = y;
       this.x = x;
       this.y = y;
       this.index = index;
       this.type = Math.min(type, Enemy.frames.length - 1);
+      this.color = Enemy.colors[this.type] ?? "#ffffff";
       this.enemies = enemies;
+      this.animationSpeed = 1.5 + Math.random() * 1.5; // frames per second
+      this.bobPhase = Math.random() * Math.PI * 2;
       this.paint();
+   }
+
+   startAttack(targetX: number, targetY: number) {
+      const dx = targetX - (this.x + this.width / 2);
+      const dy = targetY - (this.y + this.height / 2);
+      const angle = Math.atan2(dy, dx);
+      const speed = 180 + Math.random() * 60;
+      this.vxAttack = Math.cos(angle) * speed;
+      this.vyAttack = Math.sin(angle) * speed;
+      this.attackAmplitude = this.width * (1 + Math.random());
+      this.attackFrequency = 2 + Math.random() * 2;
+      this.attackTime = 0;
+      this.isAttacking = true;
+   }
+
+   updateAttack(deltaSeconds: number, formationOffsetX: number, formationOffsetY: number): boolean {
+      if (!this.isAttacking) return false;
+      this.attackTime += deltaSeconds;
+      const wobble = Math.sin(this.attackTime * this.attackFrequency) * this.attackAmplitude * deltaSeconds;
+      this.x += this.vxAttack * deltaSeconds + wobble;
+      this.y += this.vyAttack * deltaSeconds + wobble * 0.2;
+      this.animate(deltaSeconds);
+
+      const outOfBounds = this.y > Config.canvas.height + this.height || this.x < -this.width || this.x > Config.canvas.width + this.width;
+      if (outOfBounds) {
+        // Clear the final attack position to avoid trails.
+        Config.context.clearRect(this.x, this.y, this.width, this.height);
+        this.isAttacking = false;
+        // Rejoin the formation at its current offset.
+        this.x = this.baseX + formationOffsetX;
+        this.y = this.baseY + formationOffsetY;
+        return false;
+      }
+      return true;
+   }
+
+   isInAttack(): boolean {
+      return this.isAttacking;
+   }
+
+  stopAttack() { this.isAttacking = false; }
+  resetPosition(formationOffsetX: number, formationOffsetY: number) {
+     this.isAttacking = false;
+     this.x = this.baseX + formationOffsetX;
+     this.y = this.baseY + formationOffsetY;
+     this.attackTime = 0;
+     this.framePhase = 0;
+  }
+
+   getColor(): string {
+      return this.color;
+   }
+
+   animate(deltaSeconds: number) {
+      this.framePhase += this.animationSpeed * deltaSeconds;
+      this.animationFrame = Math.floor(this.framePhase) % Enemy.frames[this.type].length;
    }
 
    paint() {
@@ -102,7 +180,7 @@ export class Enemy {
       const pixelHeight = this.height / frame.length;
       const ctx = Config.context;
 
-      ctx.fillStyle = "#ffffff";
+      ctx.fillStyle = this.color;
       ctx.clearRect(this.x, this.y, this.width, this.height);
       for (let row = 0; row < frame.length; row++) {
         const line = frame[row];
@@ -114,10 +192,9 @@ export class Enemy {
               pixelWidth,
               pixelHeight
             );
-          }
+  }
         }
       }
-      this.animationFrame = (this.animationFrame + 1) % frames.length;
    }
 
    Obstruction() {
