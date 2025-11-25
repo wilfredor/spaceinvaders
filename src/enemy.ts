@@ -194,15 +194,20 @@ export class Enemy {
       return this.color;
    }
 
-   animate(deltaSeconds: number) {
+  animate(deltaSeconds: number) {
       const frames = Enemy.frames[this.type] ?? Enemy.frames[0];
+      const frameCount = frames?.length ?? 0;
+      if (frameCount === 0) return;
       this.framePhase += this.animationSpeed * deltaSeconds;
-      this.animationFrame = Math.floor(this.framePhase) % frames.length;
+      this.animationFrame = Math.floor(this.framePhase) % frameCount;
    }
 
    paint() {
       const frames = Enemy.frames[this.type] ?? Enemy.frames[0];
-      const frame = frames[this.animationFrame % frames.length];
+      if (!frames || frames.length === 0) return;
+      const frameIndex = this.animationFrame % frames.length || 0;
+      const frame = frames[frameIndex];
+      if (!frame || frame.length === 0 || !frame[0]) return;
       const pixelWidth = this.width / frame[0].length;
       const pixelHeight = this.height / frame.length;
       const ctx = Config.context;
