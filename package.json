@@ -5,9 +5,10 @@
   "main": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "develop": "webpack serve --mode development --port 4000",
-    "build": "webpack --mode production",
-    "clean": "rm -rf dist node_modules/.cache"
+    "clean": "rm -rf dist node_modules/.cache",
+    "develop": "npm run clean && webpack serve --mode development --port 4000 --watch-options-stdin",
+    "build": "npm run clean && webpack --mode production",
+    "start": "npm run develop"
   },
   "repository": {
     "type": "git",

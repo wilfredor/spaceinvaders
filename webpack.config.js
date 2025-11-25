@@ -20,6 +20,7 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
+    publicPath: '/dist/',
   },
   devServer: {
     // Serve the project root so index.html is reachable while the bundle stays in memory.
