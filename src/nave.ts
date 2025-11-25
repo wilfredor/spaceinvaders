@@ -28,7 +28,9 @@ export class Nave {
 
   fire(): void {
     if (!this.game.paused) {
-      if (this.shots <= Config.naveMaxshots) {
+      // Re-sync shot counter with active projectiles.
+      this.shots = Tool.countProjectiles('player');
+      if (this.shots < Config.naveMaxshots) {
         this.shots++;
         this.directionFire(this.x + Config.naveWidth / 2 - 1.5, this.y - 10);
       }
@@ -48,16 +50,17 @@ export class Nave {
       width,
       height,
       color: "#7fff00",
+      owner: "player",
       onStep: (p) => {
         const enemyIndex = Colision.checkColision(p.x, p.y, width, height, this.game.enemies.items);
         if (enemyIndex !== -1) {
           this.game.enemies.remove(enemyIndex);
           this.game.enemies.paint();
-          this.shots = 0;
+          this.shots = Math.max(0, this.shots - 1);
           return false;
         }
         if (p.y + height < 0) {
-          this.shots = 0;
+          this.shots = Math.max(0, this.shots - 1);
           return false;
         }
         return true;
@@ -71,15 +74,15 @@ export class Nave {
 
   moveLeft(step: number) {
     this.x -= Config.naveWidth / step;
-    if (this.x <= (-Config.naveWidth))
-      this.x = Config.canvas.width - Config.naveWidth;
+    if (this.x <= 0)
+      this.x = 0;
     this.paint();
   }
 
   moveRight(step: number) {
     this.x += Config.naveWidth / step;
-    if (this.x >= Config.canvas.width)
-      this.x = 0;
+    if (this.x + Config.naveWidth >= Config.canvas.width)
+      this.x = Config.canvas.width - Config.naveWidth;
     this.paint();
   }
 

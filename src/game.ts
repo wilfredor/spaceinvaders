@@ -26,6 +26,7 @@ export class Game {
     if (messageContent != "Pause") {
       setTimeout(() => {
         this._paused = false;
+        this.redraw();
       }, 3000);
     }
 
@@ -42,6 +43,9 @@ export class Game {
     }
 
     this._paused = pause;
+    if (!pause) {
+      this.redraw();
+    }
   }
 
   get paused ():boolean {
@@ -70,7 +74,7 @@ export class Game {
 public get level() {
     return this._level;
 }
-public set life(life: number) {
+  public set life(life: number) {
     this._life = life;
     this.setLabel('life', String(life));
 }
@@ -85,10 +89,7 @@ public get score() {
     return this._score;
 }
 private setLabel(id: string, textContent: string) {
-    const label = document.getElementById(id);
-    if (label !== null) {
-        label.textContent = textContent;
-    }
+    Tool.drawHud(this._level, this._score, this._life);
 }
 
 public get mouseX(): number {
@@ -96,6 +97,17 @@ public get mouseX(): number {
 }
 public set mouseX(value: number) {
   this._mouseX = value;
+}
+
+private redraw() {
+  Tool.clearAll();
+  Tool.drawHud(this._level, this._score, this._life);
+  if (this._enemies) {
+    this._enemies.paint();
+  }
+  if (this._nave) {
+    this._nave.paint();
+  }
 }
 
 };

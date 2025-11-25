@@ -39,16 +39,28 @@ export class Enemies {
   }
 
    initEnemies(): void {
-    const screenBorderWidth = Config.canvas.width - Config.enemyWidth;
-    const screenBorderHeight = Config.canvas.height - Config.enemyHeight;
-    const step = Config.enemyWidth * 2;
-    for (let i = this.x + Config.enemyWidth, index = 0; i <= screenBorderWidth; i += step) {
-      for (
-        let j = this.y, enemyType = 0;
-        j <= screenBorderHeight / 2 + screenBorderHeight / 6;
-        j += Config.enemyHeight * 2, enemyType = Math.min(enemyType + 1, 2)
-      ) {
-        const enemyElement = new Enemy(i, j, index, enemyType, this);
+    // Target roughly 6–8 columns and 4–5 rows like the classic layout.
+    const columns = Math.max(6, Math.round(Config.canvas.width / (Config.enemyWidth * 2.5)));
+    const rows = Math.max(4, Math.round(Config.canvas.height / (Config.enemyHeight * 6)));
+
+    const horizontalPadding = Config.enemyWidth;
+    const verticalPadding = Tool.hudHeight + Config.enemyHeight;
+
+    const availableWidth = Config.canvas.width - horizontalPadding * 2;
+    const availableHeight = Math.max(
+      Config.enemyHeight * rows,
+      Config.canvas.height * 0.5 - Tool.hudHeight
+    ); // keep them on top half, below HUD
+
+    const stepX = availableWidth / columns;
+    const stepY = availableHeight / rows;
+
+    let index = 0;
+    for (let col = 0; col < columns; col++) {
+      for (let row = 0, enemyType = 0; row < rows; row++, enemyType = Math.min(enemyType + 1, 2)) {
+        const x = horizontalPadding + col * stepX;
+        const y = verticalPadding + row * stepY;
+        const enemyElement = new Enemy(x, y, index, enemyType, this);
         this.items.push(enemyElement);
         index++;
       }

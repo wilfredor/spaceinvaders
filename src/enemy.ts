@@ -149,6 +149,7 @@ export class Enemy {
             width,
             height,
             color: "#ff4d4d",
+            owner: "enemy",
             onStep: (p) => {
                const hitHorizontally = p.x + width >= nave.x && p.x <= nave.x + Config.naveWidth;
                const hitVertically = p.y + height >= nave.y && p.y <= nave.y + Config.naveHeight;

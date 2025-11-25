@@ -5,6 +5,7 @@ import { Game } from "./game";
 import { Nave } from "./nave";
 
 window.onload = () => { 
+    Config.init();
     const game = new Game();
     game.enemies = new Enemies(game);
     game.nave = new Nave(game);
