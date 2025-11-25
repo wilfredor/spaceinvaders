@@ -44,6 +44,9 @@ function attachAudioUnlock() {
 window.onload = () => { 
     sizeCanvases();
     Config.init();
+    // Try to start audio on load; fallback unlock remains for browsers that require gesture.
+    services.unlockAudio();
+    services.startIntroTheme();
     attachAudioUnlock();
     const game = new Game(services);
     game.enemies = new Enemies(game, services);

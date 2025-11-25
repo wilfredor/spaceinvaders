@@ -4,13 +4,14 @@ export class SoundManager {
   private musicTimer?: number;
   private currentTheme: "intro" | "gameover" | null = null;
   private unlocked = false;
+  private suspendedFallbackSet = false;
 
   private ensureContext() {
     if (!this.unlocked) return;
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0.3;
+      this.master.gain.value = 0.35;
       this.master.connect(this.ctx.destination);
     }
   }
@@ -24,7 +25,23 @@ export class SoundManager {
   unlock() {
     this.unlocked = true;
     this.ensureContext();
-    this.resumeIfNeeded();
+    if (this.ctx) {
+      this.ctx.resume().catch(() => {
+        // Some browsers need a user gesture; rely on the fallback listeners.
+        if (!this.suspendedFallbackSet) {
+          this.suspendedFallbackSet = true;
+          const resume = () => {
+            this.ctx?.resume();
+            window.removeEventListener("pointerdown", resume);
+            window.removeEventListener("touchstart", resume);
+            window.removeEventListener("keydown", resume);
+          };
+          window.addEventListener("pointerdown", resume, { once: true, passive: true });
+          window.addEventListener("touchstart", resume, { once: true, passive: true });
+          window.addEventListener("keydown", resume, { once: true });
+        }
+      });
+    }
   }
 
   playShoot(owner: "player" | "enemy") {
@@ -75,52 +92,87 @@ export class SoundManager {
     this.stopMusic();
     this.currentTheme = "intro";
 
-    // Original mellow 80s-style melody (not a licensed tune).
-    const bpm = 96;
-    const beatMs = (60_000 / bpm);
+    const bpm = 92;
+    const beatMs = 60_000 / bpm;
     type Note = { f: number; beats: number };
-    const lead: Note[] = [
-      { f: 294, beats: 1 }, { f: 330, beats: 1 }, { f: 392, beats: 1 }, { f: 349, beats: 1 },
-      { f: 330, beats: 2 }, { f: 262, beats: 1 },
-      { f: 294, beats: 1 }, { f: 330, beats: 1 }, { f: 262, beats: 1 }, { f: 294, beats: 1 },
-      { f: 247, beats: 2 },
-      { f: 220, beats: 1 }, { f: 247, beats: 1 }, { f: 294, beats: 1 }, { f: 262, beats: 1 },
-      { f: 220, beats: 2 },
-      { f: 294, beats: 1 }, { f: 330, beats: 1 }, { f: 392, beats: 1 }, { f: 440, beats: 1 },
-      { f: 392, beats: 2 },
-      { f: 349, beats: 1 }, { f: 330, beats: 1 }, { f: 294, beats: 1 }, { f: 262, beats: 1 },
-      { f: 247, beats: 2 },
+    // Original multi-voice piece inspired by Baroque counterpoint (no external melody used).
+    const soprano: Note[] = [
+      { f: 392.0, beats: 1 }, { f: 440.0, beats: 1 }, { f: 494.0, beats: 1 }, { f: 523.3, beats: 1 },
+      { f: 587.3, beats: 1 }, { f: 659.3, beats: 1 }, { f: 587.3, beats: 1 }, { f: 523.3, beats: 1 },
+      { f: 494.0, beats: 2 },
+      { f: 523.3, beats: 1 }, { f: 587.3, beats: 1 }, { f: 659.3, beats: 1 }, { f: 698.5, beats: 1 },
+      { f: 740.0, beats: 1 }, { f: 659.3, beats: 1 }, { f: 587.3, beats: 1 }, { f: 523.3, beats: 1 },
+      { f: 494.0, beats: 2 },
+      { f: 440.0, beats: 1 }, { f: 494.0, beats: 1 }, { f: 523.3, beats: 1 }, { f: 587.3, beats: 1 },
+      { f: 659.3, beats: 1 }, { f: 698.5, beats: 1 }, { f: 659.3, beats: 1 }, { f: 587.3, beats: 1 },
+      { f: 523.3, beats: 2 },
+      { f: 494.0, beats: 1 }, { f: 523.3, beats: 1 }, { f: 587.3, beats: 1 }, { f: 659.3, beats: 1 },
+      { f: 587.3, beats: 1 }, { f: 523.3, beats: 1 }, { f: 494.0, beats: 1 }, { f: 440.0, beats: 1 },
+      { f: 392.0, beats: 2 },
+    ];
+    const alto: Note[] = [
+      { f: 261.6, beats: 2 }, { f: 293.7, beats: 2 }, { f: 329.6, beats: 2 }, { f: 349.2, beats: 2 },
+      { f: 392.0, beats: 2 }, { f: 440.0, beats: 2 }, { f: 392.0, beats: 2 }, { f: 349.2, beats: 2 },
+      { f: 329.6, beats: 2 }, { f: 293.7, beats: 2 }, { f: 261.6, beats: 2 }, { f: 246.9, beats: 2 },
+      { f: 261.6, beats: 2 }, { f: 293.7, beats: 2 }, { f: 329.6, beats: 2 }, { f: 349.2, beats: 2 },
+      { f: 392.0, beats: 2 }, { f: 349.2, beats: 2 }, { f: 329.6, beats: 2 }, { f: 293.7, beats: 2 },
     ];
     const bass: Note[] = [
-      { f: 110, beats: 2 }, { f: 123, beats: 2 }, { f: 98, beats: 2 }, { f: 82, beats: 2 },
-      { f: 110, beats: 2 }, { f: 98, beats: 2 }, { f: 82, beats: 2 }, { f: 73, beats: 2 },
+      { f: 130.8, beats: 2 }, { f: 146.8, beats: 2 }, { f: 164.8, beats: 2 }, { f: 174.6, beats: 2 },
+      { f: 196.0, beats: 2 }, { f: 174.6, beats: 2 }, { f: 164.8, beats: 2 }, { f: 146.8, beats: 2 },
+      { f: 130.8, beats: 2 }, { f: 123.5, beats: 2 }, { f: 110.0, beats: 2 }, { f: 98.0, beats: 2 },
+      { f: 110.0, beats: 2 }, { f: 123.5, beats: 2 }, { f: 130.8, beats: 2 }, { f: 146.8, beats: 2 },
+      { f: 164.8, beats: 2 }, { f: 146.8, beats: 2 }, { f: 130.8, beats: 2 }, { f: 110.0, beats: 2 },
     ];
-    let leadIdx = 0;
+    const chords: number[][] = [
+      [392.0, 494.0, 587.3],   // G major
+      [293.7, 369.9, 440.0],   // D
+      [329.6, 392.0, 493.9],   // E minor
+      [261.6, 329.6, 392.0],   // C
+      [293.7, 349.2, 440.0],   // D
+      [329.6, 415.3, 493.9],   // E7-ish color
+      [220.0, 261.6, 329.6],   // A minor
+      [293.7, 369.9, 440.0],   // D
+    ];
+    let sopIdx = 0;
+    let altoIdx = 0;
     let bassIdx = 0;
+    let chordIdx = 0;
 
-    const playNote = (note: Note, vol: number, type: OscillatorType) => {
+    const playVoice = (note: Note, vol: number, type: OscillatorType, detune: number = 0) => {
       if (!this.ctx || !this.master) return;
       const osc = this.ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = note.f;
+      osc.detune.value = detune;
       const gain = this.ctx.createGain();
-      gain.gain.value = vol;
       const now = this.ctx.currentTime;
+      const durSec = (note.beats * beatMs) / 1000;
       gain.gain.setValueAtTime(vol, now);
-      gain.gain.linearRampToValueAtTime(0.0001, now + (note.beats * beatMs) / 1000);
+      gain.gain.linearRampToValueAtTime(vol * 0.65, now + durSec * 0.6);
+      gain.gain.linearRampToValueAtTime(0.0001, now + durSec);
       osc.connect(gain);
       gain.connect(this.master);
       osc.start();
-      osc.stop(now + (note.beats * beatMs) / 1000);
+      osc.stop(now + durSec + 0.05);
     };
 
     this.musicTimer = window.setInterval(() => {
-      playNote(lead[leadIdx % lead.length], 0.12, "triangle");
-      if (leadIdx % 2 === 0) {
-        playNote(bass[bassIdx % bass.length], 0.1, "square");
+      playVoice(soprano[sopIdx % soprano.length], 0.18, "triangle");
+      playVoice(soprano[sopIdx % soprano.length], 0.06, "sawtooth", 6); // light shimmer
+
+      if (sopIdx % 2 === 0) {
+        playVoice(alto[altoIdx % alto.length], 0.12, "sine");
+        playVoice(bass[bassIdx % bass.length], 0.1, "sawtooth");
+        altoIdx++;
         bassIdx++;
       }
-      leadIdx++;
+      if (sopIdx % 4 === 0) {
+        const chord = chords[chordIdx % chords.length];
+        chord.forEach((f, i) => playVoice({ f, beats: 2 }, 0.07 - i * 0.01, "triangle", i === 0 ? -4 : i === 2 ? 4 : 0));
+        chordIdx++;
+      }
+      sopIdx++;
     }, beatMs);
   }
 
