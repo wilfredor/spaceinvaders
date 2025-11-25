@@ -30,30 +30,39 @@ export class Nave {
     if (!this.game.paused) {
       if (this.shots <= Config.naveMaxshots) {
         this.shots++;
-        this.directionFire(this.x + 25, Config.canvas.height - 60);
+        this.directionFire(this.x + Config.naveWidth / 2 - 1.5, this.y - 10);
       }
     }
   }
 
   directionFire(x: number, y: number) {
-    if ((y <= -Config.fireHeight))
-      this.shots = 0;
-    else {
-      setTimeout(() => {
-        if (y >= -Config.fireHeight) {//If the fire is in screen border	
-          Tool.paintFire(x,y);
-          //if some enemy the fire stop
-          const enemyIndex = Colision.checkColision(x, y, 7, 12,this.game.enemies.items);
-          if (enemyIndex!==-1) {
-            this.game.enemies.remove(enemyIndex);
-            y = -5;
-            this.game.enemies.paint();
-          }
-          //Recursion, the shot is going
-          this.directionFire(x, y - Config.fireHeight);
+    const width = 3;
+    const height = 12;
+    const speed = -500; // px/s upward
+
+    Tool.addProjectile({
+      x,
+      y,
+      vx: 0,
+      vy: speed,
+      width,
+      height,
+      color: "#7fff00",
+      onStep: (p) => {
+        const enemyIndex = Colision.checkColision(p.x, p.y, width, height, this.game.enemies.items);
+        if (enemyIndex !== -1) {
+          this.game.enemies.remove(enemyIndex);
+          this.game.enemies.paint();
+          this.shots = 0;
+          return false;
         }
-      }, 30);
-    }
+        if (p.y + height < 0) {
+          this.shots = 0;
+          return false;
+        }
+        return true;
+      }
+    });
   }
 
   paint() {

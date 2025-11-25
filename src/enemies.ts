@@ -8,7 +8,6 @@ export class Enemies {
   x!: number;
   y!: number;
   items!: Enemy[];
-  enemiesType!: HTMLImageElement[];
   game: Game;
 
   constructor( game: Game) {
@@ -22,7 +21,6 @@ export class Enemies {
 
   reset() {
     this.items = [];
-    this.enemiesType = [];
   }
 
   //Remove a enemy bi index in enemies array
@@ -41,13 +39,6 @@ export class Enemies {
   }
 
    initEnemies(): void {
-    const enemiesType: HTMLImageElement[] = [];
-  
-    for (let i = 0; i <= 2; i++) {
-      enemiesType[i] = new Image();
-      enemiesType[i].src = `images/enemies${i}.svg`;
-    }
-  
     const screenBorderWidth = Config.canvas.width - Config.enemyWidth;
     const screenBorderHeight = Config.canvas.height - Config.enemyHeight;
     const step = Config.enemyWidth * 2;
@@ -55,9 +46,9 @@ export class Enemies {
       for (
         let j = this.y, enemyType = 0;
         j <= screenBorderHeight / 2 + screenBorderHeight / 6;
-        j += Config.enemyHeight * 2, enemyType = Math.min(enemyType + 1, enemiesType.length - 1)
+        j += Config.enemyHeight * 2, enemyType = Math.min(enemyType + 1, 2)
       ) {
-        const enemyElement = new Enemy(i, j, index, enemiesType[enemyType], this);
+        const enemyElement = new Enemy(i, j, index, enemyType, this);
         this.items.push(enemyElement);
         index++;
       }

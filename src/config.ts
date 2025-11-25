@@ -1,6 +1,8 @@
 export class Config {
-    static canvas = document.getElementsByTagName("canvas")[0] as HTMLCanvasElement;
+    static canvas = document.getElementById("playfield") as HTMLCanvasElement;
     static context = this.canvas.getContext("2d") as CanvasRenderingContext2D;
+    static projectileCanvas = document.getElementById("projectiles") as HTMLCanvasElement;
+    static projectileContext = this.projectileCanvas.getContext("2d") as CanvasRenderingContext2D;
     static game = document.getElementById('game')! as HTMLElement;
     static enemyWidth = 30;
     static enemyHeight = 30;

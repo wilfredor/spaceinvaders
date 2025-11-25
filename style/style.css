@@ -37,3 +37,12 @@ canvas {
     position:absolute;
     top:23px;
 }
+
+#playfield {
+    z-index: 1;
+}
+
+#projectiles {
+    z-index: 2;
+    pointer-events: none;
+}

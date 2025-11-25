@@ -1,8 +1,23 @@
 import { Config } from "./config";
 import { Game } from "./game";
 
+type Projectile = {
+    x: number;
+    y: number;
+    vx: number;
+    vy: number;
+    width: number;
+    height: number;
+    color: string;
+    onStep?: (p: Projectile) => boolean;
+};
+
 //Check if a var exist
 export class Tool {
+    private static projectiles: Projectile[] = [];
+    private static projectileFrame?: number;
+    private static lastProjectileTimestamp?: number;
+
     //A random number multiple of 5
     static randomRange(min: number, max: number) {
         return Math.round((Math.random() * (max - min) + min) / 5) * 5;
@@ -20,18 +35,7 @@ export class Tool {
         Config.context.fillRect(x + 22, Config.canvas.height - 25, 7, 12);
         Config.context.clearRect(x + Config.naveWidth - 3, Config.canvas.height - 27, 7, 12);
     }
-    static paintFire(x:number,y:number) {
-        Config.context.clearRect(x, y + 20, 2, 12);
-        Config.context.fillRect(x, y, 2, 12);
-    }
-    static makefire(x:number, y:number) {
-        //Make a fire and delete track
-        Config.context.fillStyle = "#FF0000";
-        Config.context.clearRect(x, y - 20, 3, 9);
-        Config.context.fillRect(x, y, 3, 9);
-        Config.context.fillStyle = "#7fff00";
-     }
-     static printMessage(messageContent:string){
+    static printMessage(messageContent:string){
         var x = Config.canvas.width / 2; //Center text in canvas 
         var y = Config.canvas.height / 2;
         Config.context.font = "30px Courier New";
@@ -40,25 +44,53 @@ export class Tool {
         Config.context.textAlign = 'center';
         Config.context.fillText(messageContent, x, y);
      }
-     static directionFire(x: number, y: number,game:Game) {
-        setTimeout(() => {
-           if (y <= Config.canvas.height - 20) {//If the fire is not in screen border	
-              //Make a fire and delete track
-              Tool.makefire(x, y);
-              //the fire resume trayectory
-              this.directionFire(x, y + 20,game);
-           } else if ((x >= game.nave.x) && (x <= (game.nave.x + Config.enemyWidth))) {
-                 game.nave.life--;
-                 game.life = game.nave.life;
-                 game.nave.flashHit();
-                 if (game.nave.life <= 0) {
-                    game.showMessage("You are dead");
-                    game.reload();
-                 }
-           } else
-              Config.context.clearRect(x, y - 20, 3, 9);
-        }, 30);
+
+     static addProjectile(projectile: Projectile) {
+        this.projectiles.push(projectile);
+        if (!this.projectileFrame) {
+            this.lastProjectileTimestamp = undefined;
+            this.projectileFrame = requestAnimationFrame(ts => this.updateProjectiles(ts));
+        }
      }
+
+     private static updateProjectiles(timestamp: number) {
+        if (this.lastProjectileTimestamp === undefined) {
+            this.lastProjectileTimestamp = timestamp;
+            this.projectileFrame = requestAnimationFrame(ts => this.updateProjectiles(ts));
+            return;
+        }
+
+        const deltaSeconds = (timestamp - this.lastProjectileTimestamp) / 1000;
+        this.lastProjectileTimestamp = timestamp;
+
+        const ctx = Config.projectileContext;
+        ctx.clearRect(0, 0, Config.canvas.width, Config.canvas.height);
+
+        const alive: Projectile[] = [];
+        for (const p of this.projectiles) {
+            p.x += p.vx * deltaSeconds;
+            p.y += p.vy * deltaSeconds;
+
+            let keep = p.y + p.height >= 0 && p.y <= Config.canvas.height;
+            if (keep && p.onStep) {
+                keep = p.onStep(p) !== false;
+            }
+
+            if (keep) {
+                alive.push(p);
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.width, p.height);
+            }
+        }
+
+        this.projectiles = alive;
+        if (this.projectiles.length > 0) {
+            this.projectileFrame = requestAnimationFrame(ts => this.updateProjectiles(ts));
+        } else {
+            this.projectileFrame = undefined;
+        }
+     }
+
      static removeEnemies() {
         //Clean place
         //9 is the canon height
@@ -66,5 +98,6 @@ export class Tool {
                                 0, 
                                 Config.canvas.width, 
                                 Config.canvas.height - (Config.naveHeight + 9));
+        Config.projectileContext.clearRect(0, 0, Config.canvas.width, Config.canvas.height);
       }
 }
