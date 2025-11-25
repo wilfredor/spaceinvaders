@@ -22,7 +22,10 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
   },
   devServer: {
-    static: path.join(__dirname, "dist"),
+    // Serve the project root so index.html is reachable while the bundle stays in memory.
+    static: {
+      directory: __dirname,
+    },
     compress: true,
     port: 4000,
   },
