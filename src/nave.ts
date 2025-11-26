@@ -15,6 +15,10 @@ export class Nave {
   private flashTimeout?: number;
   private flashesRemaining = 0;
   private fireIntervalId?: number;
+  private invulnerableUntil = 0;
+  private fireIntervalMs = 180;
+  private maxShots = Config.naveMaxshots;
+  private boostTime = 0;
   private readonly services: Services;
   constructor(
     game: Game,
@@ -59,7 +63,7 @@ export class Nave {
   private startAutoFire() {
     this.fire();
     if (this.fireIntervalId !== undefined) return;
-    this.fireIntervalId = window.setInterval(() => this.fire(), 180);
+    this.fireIntervalId = window.setInterval(() => this.fire(), this.fireIntervalMs);
   }
 
   private stopAutoFire() {
@@ -70,9 +74,10 @@ export class Nave {
   }
 
   fire(): void {
+    this.updateBoost(0);
     if (!this.game.paused) {
       this.shots = this.services.countProjectiles('player');
-      if (this.shots < Config.naveMaxshots) {
+      if (this.shots < this.maxShots) {
         this.shots++;
         const width = 3;
         const height = 12;
@@ -103,7 +108,7 @@ export class Nave {
           if (enemy) {
             this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
           }
-          this.game.enemies.remove(enemyIndex);
+          this.game.enemies.remove(enemyIndex, true);
           this.game.enemies.paint();
           this.shots = Math.max(0, this.shots - 1);
           return false;
@@ -137,7 +142,11 @@ export class Nave {
 
     this.lastDrawX = this.x;
     this.lastDrawY = this.y;
+    const alpha = this.isInvulnerable() ? 0.4 : 1;
+    Config.context.save();
+    Config.context.globalAlpha = alpha;
     this.services.paintNave(this.x, this.y);
+    Config.context.restore();
   }
 
   moveLeft(step: number) {
@@ -160,6 +169,7 @@ export class Nave {
     if (this.isPauseEvent(event)) {
       this.game.pause(!this.game.paused);
     } else if (!this.game.paused) {
+      this.updateBoost(0);
       if (event instanceof MouseEvent) {
         this.handleMouseMovement(event);
       } else if (event instanceof KeyboardEvent) {
@@ -169,6 +179,7 @@ export class Nave {
   }
 
   flashHit() {
+    this.invulnerableUntil = performance.now() + 2000;
     this.flashesRemaining = 6;
     const blink = () => {
       if (this.flashesRemaining <= 0) {
@@ -226,4 +237,35 @@ export class Nave {
     return this.x - this.prevX;
   }
 
+  isInvulnerable(): boolean {
+    return performance.now() < this.invulnerableUntil;
+  }
+
+  applyFireBoost(durationSeconds: number = 8) {
+    this.boostTime = Math.max(this.boostTime, durationSeconds);
+    this.fireIntervalMs = 120;
+    this.maxShots = Config.naveMaxshots + 2;
+    if (this.fireIntervalId !== undefined) {
+      clearInterval(this.fireIntervalId);
+      this.fireIntervalId = window.setInterval(() => this.fire(), this.fireIntervalMs);
+    }
+  }
+
+  tick(deltaSeconds: number) {
+    this.updateBoost(deltaSeconds);
+  }
+
+  private updateBoost(deltaSeconds: number) {
+    if (this.boostTime <= 0) return;
+    this.boostTime -= deltaSeconds;
+    if (this.boostTime <= 0) {
+      this.fireIntervalMs = 180;
+      this.maxShots = Config.naveMaxshots;
+      this.boostTime = 0;
+      if (this.fireIntervalId !== undefined) {
+        clearInterval(this.fireIntervalId);
+        this.fireIntervalId = window.setInterval(() => this.fire(), this.fireIntervalMs);
+      }
+    }
+  }
 };

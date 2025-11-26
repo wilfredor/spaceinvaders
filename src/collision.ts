@@ -31,7 +31,7 @@ export class CollisionSystem {
         if (hit !== -1) {
           const enemy = enemies[hit];
           this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
-          this.game.enemies.remove(hit);
+          this.game.enemies.remove(hit, true);
           this.game.enemies.paint();
           return false;
         }
@@ -40,6 +40,9 @@ export class CollisionSystem {
           return false;
         }
         const nave = this.game.nave;
+        if (nave.isInvulnerable()) {
+          return true;
+        }
         const hit =
           p.x < nave.x + Config.naveWidth &&
           p.x + p.width > nave.x &&
@@ -50,7 +53,7 @@ export class CollisionSystem {
           this.game.life = nave.life;
           nave.flashHit();
           if (nave.life <= 0) {
-            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
+            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth * 1.5);
             this.services.playPlayerDestroyed();
             this.services.startGameOverTheme();
             this.game.showMessage("You are dead");
@@ -73,12 +76,12 @@ export class CollisionSystem {
         enemy.x + enemy.width > nave.x &&
         enemy.y < nave.y + Config.naveHeight &&
         enemy.y + enemy.height > nave.y;
-        if (hit) {
-          this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
-          this.game.enemies.remove(enemy.index);
-          enemy.resetPosition(0, 0);
-          nave.life--;
-          this.game.life = nave.life;
+      if (hit && !nave.isInvulnerable()) {
+        this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
+        this.game.enemies.removeByEnemy(enemy);
+        enemy.resetPosition(0, 0);
+        nave.life--;
+        this.game.life = nave.life;
           nave.flashHit();
           if (nave.life <= 0) {
             this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);

@@ -14,6 +14,9 @@
     "type": "git",
     "url": "git+https://github.com/wilfredor/spaceinvaders.git"
   },
+  "dependencies": {
+    "howler": "^2.2.4"
+  },
   "keywords": [
     "game",
     "spaceinvaders"
@@ -25,6 +28,7 @@
   },
   "homepage": "https://github.com/wilfredor/spaceinvaders#readme",
   "devDependencies": {
+    "@types/howler": "^2.2.12",
     "ts-loader": "^9.4.2",
     "typescript": "^4.9.4",
     "webpack": "^5.75.0",

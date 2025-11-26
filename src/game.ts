@@ -3,6 +3,7 @@ import { Enemies } from "./enemies";
 import { Config } from "./config";
 import { Services, services as defaultServices } from "./tools";
 import { ShieldManager } from "./shields";
+import { PowerUpManager } from "./powerUps";
 
 export class Game {
   private readonly services: Services;
@@ -14,10 +15,12 @@ export class Game {
   _score!: number;
   _life!: number;
   shields: ShieldManager;
+  powerUps: PowerUpManager;
 
   constructor(services: Services = defaultServices) {
     this.services = services;
     this.shields = new ShieldManager();
+    this.powerUps = new PowerUpManager();
     this.level = 1;
     this.score = 0;
     this.life = 3;
@@ -103,6 +106,10 @@ private setLabel(_id: string, _textContent: string) {
     if (this._enemies) {
       this._enemies.update(deltaSeconds);
     }
+    if (this._nave) {
+      this._nave.tick(deltaSeconds);
+    }
+    this.powerUps.update(deltaSeconds, this._nave);
   }
 
 public get mouseX(): number {
@@ -115,6 +122,7 @@ public set mouseX(value: number) {
 private redraw() {
   this.services.clearAll();
   this.services.drawHud(this._level, this._score, this._life);
+  this.powerUps.clear();
   this.shields.draw();
   if (this._enemies) {
     this._enemies.paint();

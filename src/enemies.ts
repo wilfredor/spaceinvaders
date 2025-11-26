@@ -35,8 +35,13 @@ export class Enemies {
   }
 
   //Remove a enemy bi index in enemies array
-  remove(index: number) {
+  remove(index: number, allowDrop: boolean = false) {
+    const enemy = this.items?.[index];
+    if (!enemy) return;
     this.items?.splice(index, 1);
+    if (allowDrop) {
+      this.game.powerUps.maybeSpawn(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+    }
     this.game.score++;
     this.services.playEnemyDestroyed();
 
@@ -52,13 +57,20 @@ export class Enemies {
     }
   }
 
+  removeByEnemy(enemy: Enemy, allowDrop: boolean = false): boolean {
+    const index = this.items.indexOf(enemy);
+    if (index === -1) return false;
+    this.remove(index, allowDrop);
+    return true;
+  }
+
    initEnemies(): void {
     // Arcade-like formation: 11 columns x 5 rows, centered.
     const columns = 11;
     const rows = 5;
 
-    const gapX = Config.enemyWidth * 1.9;
-    const gapY = Config.enemyHeight * 1.8;
+    const gapX = Config.enemyWidth * 2.3;
+    const gapY = Config.enemyHeight * 2.1;
 
     const formationWidth = Config.enemyWidth + gapX * (columns - 1);
     const startX = Math.max(0, (Config.canvas.width - formationWidth) / 2);
@@ -121,6 +133,7 @@ export class Enemies {
 
   update(deltaSeconds: number) {
     if (this.game.paused) return;
+    const toRemove: number[] = [];
     const moveX = this.horizontalDirection * this.horizontalSpeed * deltaSeconds;
     const minYBeforeDescent = this.services.hudHeight + Config.enemyHeight * 0.5;
     this.totalTime += deltaSeconds;
@@ -155,8 +168,8 @@ export class Enemies {
       if (enemy.isInAttack()) {
         // Clear previous position trail for attackers.
         Config.context.clearRect(enemy.x, enemy.y, enemy.width, enemy.height);
-        const stillAttacking = enemy.updateAttack(deltaSeconds, this.formationOffsetX, this.formationOffsetY, this.game.shields);
-        if (!stillAttacking) {
+        const attackState = enemy.updateAttack(deltaSeconds, this.formationOffsetX, this.formationOffsetY, this.game.shields);
+        if (attackState === "finished") {
           // Skip painting this frame; will be drawn in formation next frame.
           continue;
         }
@@ -166,11 +179,10 @@ export class Enemies {
           enemy.x + enemy.width > nave.x &&
           enemy.y < nave.y + Config.naveHeight &&
           enemy.y + enemy.height > nave.y;
-        if (collidesWithNave) {
+        if (collidesWithNave && !nave.isInvulnerable()) {
           Config.context.clearRect(enemy.x, enemy.y, enemy.width, enemy.height);
-          enemy.resetPosition(this.formationOffsetX, this.formationOffsetY);
           this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
-          this.remove(enemy.index);
+          toRemove.push(i);
           nave.life--;
           this.game.life = nave.life;
           nave.flashHit();
@@ -201,6 +213,13 @@ export class Enemies {
       }
       if (enemy.y < minYBeforeDescent) {
         enemy.y = minYBeforeDescent;
+      }
+    }
+
+    if (toRemove.length > 0) {
+      const uniqueIndices = Array.from(new Set(toRemove)).sort((a, b) => b - a);
+      for (const index of uniqueIndices) {
+        this.remove(index, false);
       }
     }
   }

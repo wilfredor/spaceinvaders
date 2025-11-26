@@ -1,40 +1,43 @@
+import { Howl, Howler } from "howler";
+
 export class SoundManager {
-  private ctx?: AudioContext;
   private master?: GainNode;
   private musicTimer?: number;
   private currentTheme: "intro" | "gameover" | null = null;
   private unlocked = false;
   private suspendedFallbackSet = false;
   private pendingIntro = false;
-  private audioBuffer?: AudioBuffer;
-  private musicSource?: AudioBufferSourceNode;
+  private introHowl?: Howl;
 
   private ensureContext() {
     if (!this.unlocked) return;
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      this.master = this.ctx.createGain();
+    const ctx = Howler.ctx;
+    if (!ctx) return;
+    if (!this.master) {
+      this.master = ctx.createGain();
       this.master.gain.value = 0.35;
-      this.master.connect(this.ctx.destination);
+      this.master.connect(ctx.destination);
     }
   }
 
   private resumeIfNeeded() {
-    if (this.ctx && this.ctx.state === "suspended") {
-      this.ctx.resume();
+    const ctx = Howler.ctx;
+    if (ctx && ctx.state === "suspended") {
+      ctx.resume();
     }
   }
 
   unlock() {
     this.unlocked = true;
     this.ensureContext();
-    if (this.ctx) {
-      this.ctx.resume().catch(() => {
+    const ctx = Howler.ctx;
+    if (ctx) {
+      ctx.resume().catch(() => {
         // Some browsers need a user gesture; rely on the fallback listeners.
         if (!this.suspendedFallbackSet) {
           this.suspendedFallbackSet = true;
           const resume = () => {
-            this.ctx?.resume();
+            Howler.ctx?.resume();
             window.removeEventListener("pointerdown", resume);
             window.removeEventListener("touchstart", resume);
             window.removeEventListener("keydown", resume);
@@ -51,76 +54,45 @@ export class SoundManager {
     }
   }
 
-  private async loadMusicBuffer(url: string) {
-    this.ensureContext();
-    if (!this.ctx) return;
-    if (this.audioBuffer) return;
-    const res = await fetch(url);
-    const arr = await res.arrayBuffer();
-    this.audioBuffer = await this.ctx.decodeAudioData(arr);
-  }
-
-  private playMusicBuffer(loop: boolean = true) {
-    if (!this.ctx || !this.master || !this.audioBuffer) return;
-    if (this.musicSource) {
-      this.musicSource.stop();
-      this.musicSource.disconnect();
-    }
-    const src = this.ctx.createBufferSource();
-    src.buffer = this.audioBuffer;
-    src.loop = loop;
-    const gain = this.ctx.createGain();
-    gain.gain.value = 0.35;
-    src.connect(gain);
-    gain.connect(this.master);
-    src.start();
-    this.musicSource = src;
-  }
-
   playShoot(owner: "player" | "enemy") {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
     const freq = owner === "player" ? 720 : 500;
     const duration = 0.05;
-    this.boop(freq, duration, "square", owner === "player" ? 0.2 : 0.16, false, 0.0015);
-    this.boop(freq * 0.55, duration * 0.8, "triangle", 0.09, false, 0.004);
+    this.boop(freq, duration, "square", owner === "player" ? 0.2 : 0.16, 0.0015);
+    this.boop(freq * 0.55, duration * 0.8, "triangle", 0.09, 0.004);
   }
 
   playExplosion() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
-    this.boop(140, 0.28, "sawtooth", 0.4, true, 0.006);
+    this.boop(140, 0.28, "sawtooth", 0.4, 0.006);
   }
 
   playEnemyDestroyed() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
-    this.boop(520, 0.1, "triangle", 0.18, false, 0.002);
-    this.boop(392, 0.12, "square", 0.14, false, 0.002);
+    this.boop(520, 0.1, "triangle", 0.18, 0.002);
+    this.boop(392, 0.12, "square", 0.14, 0.002);
   }
 
   playPlayerDestroyed() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
-    this.boop(160, 0.4, "sawtooth", 0.45, true, 0.01);
-    this.boop(90, 0.45, "triangle", 0.25, false, 0);
+    this.boop(160, 0.4, "sawtooth", 0.45, 0.01);
+    this.boop(90, 0.45, "triangle", 0.25, 0);
   }
 
   playPause() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
-    this.boop(440, 0.08, "sine", 0.15, false, 0);
+    this.boop(440, 0.08, "sine", 0.15, 0);
   }
 
   async startIntroTheme() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) {
+    if (!this.unlocked) {
       this.pendingIntro = true;
       return;
     }
@@ -129,13 +101,30 @@ export class SoundManager {
     this.currentTheme = "intro";
 
     try {
-      await this.loadMusicBuffer("/assets/music.mp3");
-      this.playMusicBuffer(true);
+      if (!this.introHowl) {
+        this.introHowl = new Howl({
+          src: ["/assets/music.mp3"],
+          loop: true,
+          volume: 0.35,
+          html5: false,
+          onloaderror: (_id: number, err: unknown) => {
+            console.warn("Falling back to synth theme:", err);
+            this.playSynthIntro();
+          },
+        });
+      }
+      this.introHowl.stop();
+      this.introHowl.play();
       return;
     } catch (e) {
       console.warn("Falling back to synth theme:", e);
     }
 
+    this.playSynthIntro();
+  }
+
+  private playSynthIntro() {
+    this.stopMusic();
     const bpm = 92;
     const beatMs = 60_000 / bpm;
     type Note = { f: number; beats: number };
@@ -195,13 +184,14 @@ export class SoundManager {
     let blockIdx = 0;
 
     const playVoice = (note: Note, vol: number, type: OscillatorType, detune: number = 0) => {
-      if (!this.ctx || !this.master) return;
-      const osc = this.ctx.createOscillator();
+      const ctx = Howler.ctx;
+      if (!ctx || !this.master) return;
+      const osc = ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = note.f;
       osc.detune.value = detune;
-      const gain = this.ctx.createGain();
-      const now = this.ctx.currentTime;
+      const gain = ctx.createGain();
+      const now = ctx.currentTime;
       const durSec = (note.beats * beatMs) / 1000;
       gain.gain.setValueAtTime(vol, now);
       gain.gain.linearRampToValueAtTime(vol * 0.65, now + durSec * 0.6);
@@ -240,7 +230,7 @@ export class SoundManager {
   startGameOverTheme() {
     this.ensureContext();
     this.resumeIfNeeded();
-    if (!this.ctx) return;
+    if (!this.unlocked) return;
     if (this.currentTheme === "gameover") return;
     this.stopMusic();
     this.currentTheme = "gameover";
@@ -254,13 +244,14 @@ export class SoundManager {
     ];
     let idx = 0;
     const playNote = (note: Note, vol: number, type: OscillatorType) => {
-      if (!this.ctx || !this.master) return;
-      const osc = this.ctx.createOscillator();
+      const ctx = Howler.ctx;
+      if (!ctx || !this.master) return;
+      const osc = ctx.createOscillator();
       osc.type = type;
       osc.frequency.value = note.f;
-      const gain = this.ctx.createGain();
+      const gain = ctx.createGain();
       gain.gain.value = vol;
-      const now = this.ctx.currentTime;
+      const now = ctx.currentTime;
       gain.gain.setValueAtTime(vol, now);
       gain.gain.linearRampToValueAtTime(0.0001, now + (note.beats * beatMs) / 1000);
       osc.connect(gain);
@@ -280,28 +271,32 @@ export class SoundManager {
       clearInterval(this.musicTimer);
       this.musicTimer = undefined;
     }
+    if (this.introHowl) {
+      this.introHowl.stop();
+    }
     this.currentTheme = null;
     // Passive one-shots auto-stop; nothing persistent to clear beyond timer.
   }
 
-  private boop(freq: number, duration: number, type: OscillatorType, volume: number, noise: boolean = false, glide: number = 0) {
-    if (!this.ctx || !this.master) return;
-    const osc = this.ctx.createOscillator();
+  private boop(freq: number, duration: number, type: OscillatorType, volume: number, glide: number = 0) {
+    const ctx = Howler.ctx;
+    if (!ctx || !this.master) return;
+    const osc = ctx.createOscillator();
     osc.type = type;
     osc.frequency.value = freq;
     if (glide > 0) {
-      osc.frequency.linearRampToValueAtTime(freq * 0.92, this.ctx.currentTime + glide);
+      osc.frequency.linearRampToValueAtTime(freq * 0.92, ctx.currentTime + glide);
     }
-    const gain = this.ctx.createGain();
+    const gain = ctx.createGain();
     gain.gain.value = volume;
     const decay = 0.12;
-    gain.gain.setValueAtTime(volume, this.ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration + decay);
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration + decay);
 
     osc.connect(gain);
     gain.connect(this.master);
 
     osc.start();
-    osc.stop(this.ctx.currentTime + duration + decay);
+    osc.stop(ctx.currentTime + duration + decay);
   }
 }

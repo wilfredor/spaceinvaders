@@ -5,10 +5,12 @@ import { Nave } from "./nave";
 import { services } from "./tools";
 import { GameLoop } from "./gameLoop";
 import { CollisionSystem } from "./collision";
+import { BackgroundController } from "./background";
 
 function sizeCanvases() {
     const playfield = document.getElementById("playfield") as HTMLCanvasElement;
     const projectiles = document.getElementById("projectiles") as HTMLCanvasElement;
+    const background = document.getElementById("background") as HTMLCanvasElement | null;
     if (!playfield || !projectiles) return;
 
     const maxWidth = Math.min(480, Math.max(320, window.innerWidth - 20));
@@ -20,6 +22,10 @@ function sizeCanvases() {
     playfield.height = height;
     projectiles.width = maxWidth;
     projectiles.height = height;
+    if (background) {
+        background.width = maxWidth;
+        background.height = height;
+    }
 
     const gameContainer = document.getElementById("game") as HTMLElement;
     if (gameContainer) {
@@ -41,8 +47,14 @@ function attachAudioUnlock() {
     window.addEventListener("keydown", unlock, { once: true });
 }
 
-window.onload = () => { 
+window.onload = () => {
     sizeCanvases();
+    const backgroundCanvas = document.getElementById("background") as HTMLCanvasElement | null;
+    let background: BackgroundController | null = null;
+    if (backgroundCanvas) {
+        background = new BackgroundController(backgroundCanvas, "space");
+    }
+
     Config.init();
     // Attempt to start audio immediately; fallback unlock remains for browsers that still require gesture.
     services.unlockAudio();
@@ -55,7 +67,17 @@ window.onload = () => {
     const collisions = new CollisionSystem(game, services);
     const loop = new GameLoop();
     loop.start((dt) => {
+      if (background) {
+        background.setMode(game.level >= 2 ? "tron" : "space");
+      }
       game.update(dt);
       collisions.tick();
+    });
+
+    window.addEventListener("resize", () => {
+        sizeCanvases();
+        if (backgroundCanvas && background) {
+            background.resize(backgroundCanvas.width, backgroundCanvas.height);
+        }
     });
 };

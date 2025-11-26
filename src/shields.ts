@@ -88,6 +88,28 @@ class Shield {
     return false;
   }
 
+  damage(px: number, py: number, pw: number, ph: number, count: number): boolean {
+    const aliveCells = this.cells.filter((c) => c.alive);
+    const victims: Cell[] = [];
+    for (const cell of aliveCells) {
+      if (victims.length >= count) break;
+      const intersects =
+        px < cell.x + this.cellWidth &&
+        px + pw > cell.x &&
+        py < cell.y + this.cellHeight &&
+        py + ph > cell.y;
+      if (intersects) {
+        victims.push(cell);
+      }
+    }
+    if (victims.length === 0) return false;
+    for (const victim of victims) {
+      victim.alive = false;
+      Config.context.clearRect(victim.x, victim.y, this.cellWidth, this.cellHeight);
+    }
+    return true;
+  }
+
   private destroyCluster(center: Cell, aliveCells: Cell[]) {
     // Remove the hit cell plus the 3 closest neighbors to mimic chunk damage.
     const impactX = center.x + this.cellWidth / 2;
@@ -174,5 +196,16 @@ export class ShieldManager {
 
   getGapCenters(): number[] {
     return this.shields.map((s) => s.x + (s.patternWidth * s.cellSize.width) / 2);
+  }
+
+  damage(px: number, py: number, pw: number, ph: number, count: number): boolean {
+    let damaged = false;
+    for (const shield of this.shields) {
+      if (shield.damage(px, py, pw, ph, count)) {
+        damaged = true;
+        break;
+      }
+    }
+    return damaged;
   }
 }

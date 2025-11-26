@@ -3,6 +3,7 @@ import { Enemies } from "./enemies";
 import { Game } from "./game";
 import { services as defaultServices, Services, Projectile } from "./tools";
 import { ShieldManager } from "./shields";
+type AttackUpdate = "attacking" | "finished";
 export class Enemy {
    x: number;
    y: number;
@@ -25,6 +26,7 @@ export class Enemy {
    private attackFrequency = 0;
    private color: string;
    private readonly services: Services;
+   private blinkUntil = 0;
    private static frames: string[][][] = [
       // Classic invader shape: two-frame animation.
       [
@@ -119,7 +121,7 @@ export class Enemy {
       this.paint();
    }
 
-   startAttack(targetX: number, targetY: number) {
+  startAttack(targetX: number, targetY: number) {
       const dx = targetX - (this.x + this.width / 2);
       const dy = targetY - (this.y + this.height / 2);
       const angle = Math.atan2(dy, dx);
@@ -132,8 +134,8 @@ export class Enemy {
       this.isAttacking = true;
    }
 
-  updateAttack(deltaSeconds: number, formationOffsetX: number, formationOffsetY: number, shields: ShieldManager): boolean {
-    if (!this.isAttacking) return false;
+  updateAttack(deltaSeconds: number, formationOffsetX: number, formationOffsetY: number, shields: ShieldManager): AttackUpdate {
+    if (!this.isAttacking) return "finished";
     this.attackTime += deltaSeconds;
     const wobble = Math.sin(this.attackTime * this.attackFrequency) * this.attackAmplitude * deltaSeconds;
     const shieldTop = shields.getTop();
@@ -154,11 +156,23 @@ export class Enemy {
 
     const nextX = this.x + this.vxAttack * deltaSeconds + wobble;
     const nextY = this.y + this.vyAttack * deltaSeconds + wobble * 0.2;
+    const collisionSamples: Array<{ x: number; y: number }> = [
+      { x: nextX, y: nextY },
+      { x: this.x, y: this.y },
+      { x: (this.x + nextX) / 2, y: (this.y + nextY) / 2 },
+    ];
+    const hitSample = collisionSamples.find((sample) =>
+      shields.collidesBody(sample.x, sample.y, this.width, this.height)
+    );
 
-    if (shields.collidesBody(nextX, nextY, this.width, this.height)) {
+    if (hitSample) {
+      // Damage shield and explode.
+      shields.damage(hitSample.x, hitSample.y, this.width, this.height, 3);
+      Config.context.clearRect(this.x, this.y, this.width, this.height);
+      this.services.explode(hitSample.x + this.width / 2, hitSample.y + this.height / 2, this.width, this.getColor());
       this.resetPosition(formationOffsetX, formationOffsetY);
-        return false;
-      }
+      return "finished";
+    }
 
       this.x = nextX;
       this.y = nextY;
@@ -172,9 +186,9 @@ export class Enemy {
         // Rejoin the formation at its current offset.
         this.x = this.baseX + formationOffsetX;
         this.y = this.baseY + formationOffsetY;
-        return false;
+        return "finished";
       }
-      return true;
+      return "attacking";
    }
 
    isInAttack(): boolean {
@@ -188,6 +202,7 @@ export class Enemy {
       this.y = this.baseY + formationOffsetY;
       this.attackTime = 0;
       this.framePhase = 0;
+      this.blinkUntil = performance.now() + 600;
    }
 
    getColor(): string {
@@ -211,6 +226,12 @@ export class Enemy {
       const pixelWidth = this.width / frame[0].length;
       const pixelHeight = this.height / frame.length;
       const ctx = Config.context;
+
+      if (this.blinkUntil > performance.now()) {
+        // Blink effect on teleport/rejoin.
+        const blinkOn = Math.floor(performance.now() / 100) % 2 === 0;
+        if (!blinkOn) return;
+      }
 
       ctx.fillStyle = this.color;
       ctx.clearRect(this.x, this.y, this.width, this.height);
@@ -261,13 +282,14 @@ export class Enemy {
             color: this.color,
             owner: "enemy",
             onStep: (p: Projectile) => {
-               const hitHorizontally = p.x + width >= nave.x && p.x <= nave.x + Config.naveWidth;
-               const hitVertically = p.y + height >= nave.y && p.y <= nave.y + Config.naveHeight;
-               if (hitHorizontally && hitVertically) {
+              const hitHorizontally = p.x + width >= nave.x && p.x <= nave.x + Config.naveWidth;
+              const hitVertically = p.y + height >= nave.y && p.y <= nave.y + Config.naveHeight;
+               if (hitHorizontally && hitVertically && !nave.isInvulnerable()) {
                   nave.life--;
                   game.life = nave.life;
                   nave.flashHit();
                   if (nave.life <= 0) {
+                     this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth * 1.5);
                      this.services.playPlayerDestroyed();
                      this.services.startGameOverTheme();
                      game.showMessage("You are dead");
