@@ -249,8 +249,8 @@ var Enemies = /** @class */ (function () {
         // Arcade-like formation: 11 columns x 5 rows, centered.
         var columns = 11;
         var rows = 5;
-        var gapX = config_1.Config.enemyWidth * 1.5;
-        var gapY = config_1.Config.enemyHeight * 1.6;
+        var gapX = config_1.Config.enemyWidth * 1.9;
+        var gapY = config_1.Config.enemyHeight * 1.8;
         var formationWidth = config_1.Config.enemyWidth + gapX * (columns - 1);
         var startX = Math.max(0, (config_1.Config.canvas.width - formationWidth) / 2);
         var startY = this.services.hudHeight + config_1.Config.enemyHeight * 1.5;

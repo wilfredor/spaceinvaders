@@ -57,8 +57,8 @@ export class Enemies {
     const columns = 11;
     const rows = 5;
 
-    const gapX = Config.enemyWidth * 1.5;
-    const gapY = Config.enemyHeight * 1.6;
+    const gapX = Config.enemyWidth * 1.9;
+    const gapY = Config.enemyHeight * 1.8;
 
     const formationWidth = Config.enemyWidth + gapX * (columns - 1);
     const startX = Math.max(0, (Config.canvas.width - formationWidth) / 2);
