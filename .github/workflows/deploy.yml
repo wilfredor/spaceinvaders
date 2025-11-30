@@ -38,7 +38,7 @@ jobs:
           mkdir -p site
           cp index.html site/
           cp .nojekyll site/
-          cp -r style assets images dist site/
+          cp -r style assets dist site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
