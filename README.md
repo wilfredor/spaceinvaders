@@ -33,6 +33,11 @@ Build the production bundle to `dist/`:
 npm run build
 ```
 
+## Deployment
+- Commits pushed to `master` trigger the GitHub Actions workflow at `.github/workflows/deploy.yml`.
+- The workflow builds the bundle and publishes the site to GitHub Pages at http://wilfredor.github.io/spaceinvaders.
+- Ensure the repository Pages setting is set to deploy from GitHub Actions so the workflow can upload successfully.
+
 ## Controls
 - Move: Left/Right arrows or mouse
 - Fire: Spacebar or left click

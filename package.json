@@ -26,7 +26,7 @@
   "bugs": {
     "url": "https://github.com/wilfredor/spaceinvaders/issues"
   },
-  "homepage": "https://github.com/wilfredor/spaceinvaders#readme",
+  "homepage": "http://wilfredor.github.io/spaceinvaders",
   "devDependencies": {
     "@types/howler": "^2.2.12",
     "ts-loader": "^9.4.2",

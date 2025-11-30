@@ -20,7 +20,8 @@ module.exports = {
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '/dist/',
+    // Keep assets loading relative to whichever base path the site is served from (incl. GitHub Pages).
+    publicPath: 'auto',
   },
   devServer: {
     // Serve the project root so index.html is reachable while the bundle stays in memory.
