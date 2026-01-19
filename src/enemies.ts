@@ -16,6 +16,7 @@ export class Enemies {
   private formationOffsetY = 0;
   private attackAccumulator = 0;
   private nextAttackIn = 1.5;
+  private fireIntervalId?: number;
   private readonly services: Services;
 
   constructor( game: Game, services: Services = defaultServices) {
@@ -108,27 +109,34 @@ export class Enemies {
     return Array.from(buckets.values());
   }
 
-  //paint all enemies
+  // Paint all enemies
   paint() {
     this.services.removeEnemies();
     this.game.shields.draw();
-    for (var i = 0; i <= this.items.length - 1; i++)
+    for (let i = 0; i < this.items.length; i++) {
       this.items[i].paint();
+    }
     return true;
   }
 
-  //Run fire to a enemy
+  // Run fire from a random front-line enemy
   enemyFire(speed: number) {
-    //First enemy in last row
-    setTimeout(() => {
+    this.stopEnemyFire();
+    this.fireIntervalId = window.setInterval(() => {
+      if (this.game.paused) return;
       if (this.items.length > 0) {
-        // Choose a random enemy from the bottom-most row per column.
         const frontLine = this.frontLineEnemies();
         const shooter = frontLine[Math.floor(Math.random() * frontLine.length)];
         shooter?.fire();
       }
-      this.enemyFire(speed);
     }, speed);
+  }
+
+  stopEnemyFire() {
+    if (this.fireIntervalId !== undefined) {
+      clearInterval(this.fireIntervalId);
+      this.fireIntervalId = undefined;
+    }
   }
 
   update(deltaSeconds: number) {
@@ -187,11 +195,7 @@ export class Enemies {
           this.game.life = nave.life;
           nave.flashHit();
           if (nave.life <= 0) {
-            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
-            this.services.playPlayerDestroyed();
-            this.services.startGameOverTheme();
-            this.game.showMessage("You are dead");
-            this.game.reload();
+            this.game.gameOver();
             return;
           }
           continue;
@@ -205,10 +209,7 @@ export class Enemies {
 
       enemy.paint();
       if (!enemy.isInAttack() && enemy.y >= Config.canvas.height - 3 * Config.naveHeight) {
-        this.game.showMessage(`You are dead`);
-        this.services.playPlayerDestroyed();
-        this.services.startGameOverTheme();
-        window.location.reload();
+        this.game.gameOver();
         return;
       }
       if (enemy.y < minYBeforeDescent) {
@@ -240,4 +241,4 @@ export class Enemies {
     const targetY = this.game.nave.y;
     shooter.startAttack(targetX, targetY);
   }
-};
+}

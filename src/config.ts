@@ -3,7 +3,7 @@ export class Config {
     static context: CanvasRenderingContext2D;
     static projectileCanvas: HTMLCanvasElement;
     static projectileContext: CanvasRenderingContext2D;
-    static game = document.getElementById('game')! as HTMLElement;
+    static game: HTMLElement;
 
     // Base values used to scale sprites relative to canvas size.
     private static readonly baseWidth = 560;
@@ -26,6 +26,7 @@ export class Config {
     static enemyFireSpeed: number;
 
     static init() {
+        this.game = document.getElementById("game") as HTMLElement;
         this.canvas = document.getElementById("playfield") as HTMLCanvasElement;
         this.context = this.canvas.getContext("2d") as CanvasRenderingContext2D;
         this.projectileCanvas = document.getElementById("projectiles") as HTMLCanvasElement;

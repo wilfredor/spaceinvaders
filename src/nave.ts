@@ -1,4 +1,3 @@
-import { Colision } from "./colision";
 import { Config } from "./config";
 import { Game } from "./game";
 import { services as defaultServices, Services, Projectile } from "./tools";
@@ -20,6 +19,16 @@ export class Nave {
   private maxShots = Config.naveMaxshots;
   private boostTime = 0;
   private readonly services: Services;
+
+  // Event listener references for cleanup
+  private readonly boundKeyDown: (e: KeyboardEvent) => void;
+  private readonly boundMouseDown: () => void;
+  private readonly boundMouseUp: () => void;
+  private readonly boundMouseMove: (e: MouseEvent) => void;
+  private readonly boundTouchStart: (e: TouchEvent) => void;
+  private readonly boundTouchMove: (e: TouchEvent) => void;
+  private readonly boundTouchEnd: () => void;
+
   constructor(
     game: Game,
     services: Services = defaultServices,
@@ -33,31 +42,42 @@ export class Nave {
     this.life = Config.naveLife;
     this.y = this.lastDrawY;
     this.game = game;
-    this.paint();
-    window.onkeydown = (event: KeyboardEvent) => { this.move(event); };
-    window.onmousedown = () => { this.startAutoFire(); };
-    window.onmouseup = () => { this.stopAutoFire(); };
-    window.onmouseleave = () => { this.stopAutoFire(); };
-    window.onmouseout = () => { this.stopAutoFire(); };
-    window.onmousemove = (event: MouseEvent) => { this.move(event); };
-    window.addEventListener("touchstart", (event: TouchEvent) => {
-      event.preventDefault();
-      const x = event.touches[0]?.clientX;
+
+    // Bind event handlers
+    this.boundKeyDown = (e: KeyboardEvent) => this.move(e);
+    this.boundMouseDown = () => this.startAutoFire();
+    this.boundMouseUp = () => this.stopAutoFire();
+    this.boundMouseMove = (e: MouseEvent) => this.move(e);
+    this.boundTouchStart = (e: TouchEvent) => {
+      e.preventDefault();
+      const x = e.touches[0]?.clientX;
       if (x !== undefined) {
         this.handleTouchMovement(x);
       }
       this.startAutoFire();
-    }, { passive: false });
-    window.addEventListener("touchmove", (event: TouchEvent) => {
-      event.preventDefault();
-      const x = event.touches[0]?.clientX;
+    };
+    this.boundTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const x = e.touches[0]?.clientX;
       if (x !== undefined) {
         this.handleTouchMovement(x);
       }
-    }, { passive: false });
-    window.addEventListener("touchend", () => { this.stopAutoFire(); }, { passive: true });
-    window.addEventListener("touchcancel", () => { this.stopAutoFire(); }, { passive: true });
+    };
+    this.boundTouchEnd = () => this.stopAutoFire();
 
+    // Add event listeners
+    window.addEventListener("keydown", this.boundKeyDown);
+    window.addEventListener("mousedown", this.boundMouseDown);
+    window.addEventListener("mouseup", this.boundMouseUp);
+    window.addEventListener("mouseleave", this.boundMouseUp);
+    window.addEventListener("mouseout", this.boundMouseUp);
+    window.addEventListener("mousemove", this.boundMouseMove);
+    window.addEventListener("touchstart", this.boundTouchStart, { passive: false });
+    window.addEventListener("touchmove", this.boundTouchMove, { passive: false });
+    window.addEventListener("touchend", this.boundTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", this.boundTouchEnd, { passive: true });
+
+    this.paint();
   }
 
   private startAutoFire() {
@@ -102,19 +122,9 @@ export class Nave {
       color: "#7fff00",
       owner: "player",
       onStep: (p: Projectile) => {
-        const enemyIndex = Colision.checkColision(p.x, p.y, width, height, this.game.enemies.items);
-        if (enemyIndex !== -1) {
-          const enemy = this.game.enemies.items[enemyIndex];
-          if (enemy) {
-            this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
-          }
-          this.game.enemies.remove(enemyIndex, true);
-          this.game.enemies.paint();
-          this.shots = Math.max(0, this.shots - 1);
-          return false;
-        }
+        // Collision detection is handled by CollisionSystem
+        // This callback only checks if projectile is out of bounds
         if (p.y + height < 0) {
-          this.shots = Math.max(0, this.shots - 1);
           return false;
         }
         return true;
@@ -268,4 +278,21 @@ export class Nave {
       }
     }
   }
-};
+
+  destroy() {
+    this.stopAutoFire();
+    if (this.flashTimeout) {
+      clearTimeout(this.flashTimeout);
+    }
+    window.removeEventListener("keydown", this.boundKeyDown);
+    window.removeEventListener("mousedown", this.boundMouseDown);
+    window.removeEventListener("mouseup", this.boundMouseUp);
+    window.removeEventListener("mouseleave", this.boundMouseUp);
+    window.removeEventListener("mouseout", this.boundMouseUp);
+    window.removeEventListener("mousemove", this.boundMouseMove);
+    window.removeEventListener("touchstart", this.boundTouchStart);
+    window.removeEventListener("touchmove", this.boundTouchMove);
+    window.removeEventListener("touchend", this.boundTouchEnd);
+    window.removeEventListener("touchcancel", this.boundTouchEnd);
+  }
+}

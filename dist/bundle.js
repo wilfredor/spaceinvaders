@@ -3545,55 +3545,6 @@ exports.BackgroundController = BackgroundController;
 
 /***/ }),
 
-/***/ 124:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Colision = void 0;
-var Colision = /** @class */ (function () {
-    function Colision() {
-    }
-    //Check if a enemy in array is colision with a fire
-    Colision.checkColision = function (x, y, width, height, enemies) {
-        var fireBounds = {
-            x1: x,
-            y1: y,
-            x2: x + width,
-            y2: y + height,
-        };
-        var elementsNumber = enemies.length;
-        for (var i = 0; i <= elementsNumber; i++) {
-            if (enemies[i]) {
-                var enemyBounds = {
-                    x1: enemies[i].x,
-                    y1: enemies[i].y,
-                    x2: enemies[i].x + enemies[i].width,
-                    y2: enemies[i].y + enemies[i].height,
-                };
-                if (this.checkVerticalCollision(fireBounds, enemyBounds) &&
-                    this.checkHorizontalCollision(fireBounds, enemyBounds)) {
-                    console.log("killed ".concat(i));
-                    return i;
-                }
-            }
-        }
-        return -1;
-    };
-    Colision.checkVerticalCollision = function (bounds1, bounds2) {
-        return bounds2.y2 <= bounds1.y2 && bounds2.y2 >= bounds1.y1 || bounds1.y1 >= bounds2.y1 && bounds1.y1 <= bounds2.y2;
-    };
-    Colision.checkHorizontalCollision = function (bounds1, bounds2) {
-        return bounds1.x1 >= bounds2.x1 && bounds1.x1 <= bounds2.x2 || bounds2.x2 <= bounds1.x2 && bounds2.x2 >= bounds1.x1;
-    };
-    return Colision;
-}());
-exports.Colision = Colision;
-
-
-/***/ }),
-
 /***/ 874:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
@@ -3652,11 +3603,7 @@ var CollisionSystem = /** @class */ (function () {
                     _this.game.life = nave.life;
                     nave.flashHit();
                     if (nave.life <= 0) {
-                        _this.services.explode(nave.x + config_1.Config.naveWidth / 2, nave.y + config_1.Config.naveHeight / 2, config_1.Config.naveWidth * 1.5);
-                        _this.services.playPlayerDestroyed();
-                        _this.services.startGameOverTheme();
-                        _this.game.showMessage("You are dead");
-                        _this.game.reload();
+                        _this.game.gameOver();
                     }
                     return false;
                 }
@@ -3683,11 +3630,7 @@ var CollisionSystem = /** @class */ (function () {
                 this.game.life = nave.life;
                 nave.flashHit();
                 if (nave.life <= 0) {
-                    this.services.explode(nave.x + config_1.Config.naveWidth / 2, nave.y + config_1.Config.naveHeight / 2, config_1.Config.naveWidth);
-                    this.services.playPlayerDestroyed();
-                    this.services.startGameOverTheme();
-                    this.game.showMessage("You are dead");
-                    this.game.reload();
+                    this.game.gameOver();
                     return;
                 }
             }
@@ -3711,6 +3654,7 @@ var Config = /** @class */ (function () {
     function Config() {
     }
     Config.init = function () {
+        this.game = document.getElementById("game");
         this.canvas = document.getElementById("playfield");
         this.context = this.canvas.getContext("2d");
         this.projectileCanvas = document.getElementById("projectiles");
@@ -3726,7 +3670,6 @@ var Config = /** @class */ (function () {
         this.firstSpeedLevel = Math.round(this.baseFirstSpeedLevel * speedScale);
         this.enemyFireSpeed = Math.round(this.baseEnemyFireSpeed * speedScale);
     };
-    Config.game = document.getElementById('game');
     // Base values used to scale sprites relative to canvas size.
     Config.baseWidth = 560;
     Config.baseHeight = 720;
@@ -3849,27 +3792,34 @@ var Enemies = /** @class */ (function () {
         }
         return Array.from(buckets.values());
     };
-    //paint all enemies
+    // Paint all enemies
     Enemies.prototype.paint = function () {
         this.services.removeEnemies();
         this.game.shields.draw();
-        for (var i = 0; i <= this.items.length - 1; i++)
+        for (var i = 0; i < this.items.length; i++) {
             this.items[i].paint();
+        }
         return true;
     };
-    //Run fire to a enemy
+    // Run fire from a random front-line enemy
     Enemies.prototype.enemyFire = function (speed) {
         var _this = this;
-        //First enemy in last row
-        setTimeout(function () {
+        this.stopEnemyFire();
+        this.fireIntervalId = window.setInterval(function () {
+            if (_this.game.paused)
+                return;
             if (_this.items.length > 0) {
-                // Choose a random enemy from the bottom-most row per column.
                 var frontLine = _this.frontLineEnemies();
                 var shooter = frontLine[Math.floor(Math.random() * frontLine.length)];
                 shooter === null || shooter === void 0 ? void 0 : shooter.fire();
             }
-            _this.enemyFire(speed);
         }, speed);
+    };
+    Enemies.prototype.stopEnemyFire = function () {
+        if (this.fireIntervalId !== undefined) {
+            clearInterval(this.fireIntervalId);
+            this.fireIntervalId = undefined;
+        }
     };
     Enemies.prototype.update = function (deltaSeconds) {
         if (this.game.paused)
@@ -3926,11 +3876,7 @@ var Enemies = /** @class */ (function () {
                     this.game.life = nave.life;
                     nave.flashHit();
                     if (nave.life <= 0) {
-                        this.services.explode(nave.x + config_1.Config.naveWidth / 2, nave.y + config_1.Config.naveHeight / 2, config_1.Config.naveWidth);
-                        this.services.playPlayerDestroyed();
-                        this.services.startGameOverTheme();
-                        this.game.showMessage("You are dead");
-                        this.game.reload();
+                        this.game.gameOver();
                         return;
                     }
                     continue;
@@ -3944,10 +3890,7 @@ var Enemies = /** @class */ (function () {
             }
             enemy.paint();
             if (!enemy.isInAttack() && enemy.y >= config_1.Config.canvas.height - 3 * config_1.Config.naveHeight) {
-                this.game.showMessage("You are dead");
-                this.services.playPlayerDestroyed();
-                this.services.startGameOverTheme();
-                window.location.reload();
+                this.game.gameOver();
                 return;
             }
             if (enemy.y < minYBeforeDescent) {
@@ -3982,7 +3925,6 @@ var Enemies = /** @class */ (function () {
     return Enemies;
 }());
 exports.Enemies = Enemies;
-;
 
 
 /***/ }),
@@ -4155,7 +4097,6 @@ var Enemy = /** @class */ (function () {
     ;
     //Enemy fire
     Enemy.prototype.fire = function () {
-        var _this = this;
         if (!this.enemies.game.paused) {
             var width_1 = 3;
             var height_1 = 12;
@@ -4182,11 +4123,7 @@ var Enemy = /** @class */ (function () {
                         game_1.life = nave_1.life;
                         nave_1.flashHit();
                         if (nave_1.life <= 0) {
-                            _this.services.explode(nave_1.x + config_1.Config.naveWidth / 2, nave_1.y + config_1.Config.naveHeight / 2, config_1.Config.naveWidth * 1.5);
-                            _this.services.playPlayerDestroyed();
-                            _this.services.startGameOverTheme();
-                            game_1.showMessage("You are dead");
-                            game_1.reload();
+                            game_1.gameOver();
                         }
                         return false;
                     }
@@ -4195,7 +4132,6 @@ var Enemy = /** @class */ (function () {
             });
         }
     };
-    ;
     Enemy.frames = [
         // Classic invader shape: two-frame animation.
         [
@@ -4286,93 +4222,33 @@ exports.Enemy = Enemy;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Game = void 0;
+var nave_1 = __webpack_require__(861);
+var enemies_1 = __webpack_require__(749);
+var config_1 = __webpack_require__(913);
 var tools_1 = __webpack_require__(594);
 var shields_1 = __webpack_require__(799);
 var powerUps_1 = __webpack_require__(306);
 var Game = /** @class */ (function () {
     function Game(services) {
         if (services === void 0) { services = tools_1.services; }
+        this.paused = false;
+        this.mouseX = 0;
+        this._level = 1;
+        this._score = 0;
+        this._life = 3;
+        this.isGameOver = false;
         this.services = services;
         this.shields = new shields_1.ShieldManager();
         this.powerUps = new powerUps_1.PowerUpManager();
-        this.level = 1;
-        this.score = 0;
-        this.life = 3;
+        this.updateHud();
     }
-    Game.prototype.showMessage = function (messageContent) {
-        var _this = this;
-        this._paused = true;
-        this.services.printMessage(messageContent);
-        if (messageContent != "Pause") {
-            setTimeout(function () {
-                _this._paused = false;
-                _this.redraw();
-            }, 3000);
-        }
-    };
-    Game.prototype.reload = function () {
-        setTimeout(function () {
-            window.location.reload();
-        }, 3000);
-    };
-    Game.prototype.pause = function (pause) {
-        if (pause) {
-            this.services.playPauseSound();
-            this.showMessage("Pause");
-        }
-        this._paused = pause;
-        if (!pause) {
-            this.redraw();
-        }
-    };
-    Object.defineProperty(Game.prototype, "paused", {
-        get: function () {
-            return this._paused;
-        },
-        set: function (paused) {
-            this._paused = paused;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Game.prototype, "enemies", {
-        get: function () {
-            return this._enemies;
-        },
-        set: function (enemies) {
-            this._enemies = enemies;
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Game.prototype, "nave", {
-        get: function () {
-            return this._nave;
-        },
-        set: function (nave) {
-            this._nave = nave;
-        },
-        enumerable: false,
-        configurable: true
-    });
     Object.defineProperty(Game.prototype, "level", {
         get: function () {
             return this._level;
         },
-        set: function (level) {
-            this._level = level;
-            this.setLabel('level', String(level));
-        },
-        enumerable: false,
-        configurable: true
-    });
-    Object.defineProperty(Game.prototype, "life", {
-        get: function () {
-            return this._life;
-        },
-        set: function (life) {
-            this._life = life;
-            this.setLabel('life', String(life));
+        set: function (value) {
+            this._level = value;
+            this.updateHud();
         },
         enumerable: false,
         configurable: true
@@ -4381,53 +4257,111 @@ var Game = /** @class */ (function () {
         get: function () {
             return this._score;
         },
-        set: function (score) {
-            this._score = score;
-            this.setLabel('score', String(score));
+        set: function (value) {
+            this._score = value;
+            this.updateHud();
         },
         enumerable: false,
         configurable: true
     });
-    Game.prototype.setLabel = function (_id, _textContent) {
-        this.services.drawHud(this._level, this._score, this._life);
-    };
-    Game.prototype.update = function (deltaSeconds) {
-        if (this._paused)
-            return;
-        if (this._enemies) {
-            this._enemies.update(deltaSeconds);
-        }
-        if (this._nave) {
-            this._nave.tick(deltaSeconds);
-        }
-        this.powerUps.update(deltaSeconds, this._nave);
-    };
-    Object.defineProperty(Game.prototype, "mouseX", {
+    Object.defineProperty(Game.prototype, "life", {
         get: function () {
-            return this._mouseX;
+            return this._life;
         },
         set: function (value) {
-            this._mouseX = value;
+            this._life = value;
+            this.updateHud();
         },
         enumerable: false,
         configurable: true
     });
+    Game.prototype.updateHud = function () {
+        this.services.drawHud(this._level, this._score, this._life);
+    };
+    Game.prototype.showMessage = function (messageContent) {
+        var _this = this;
+        this.paused = true;
+        this.services.printMessage(messageContent);
+        if (messageContent !== "Pause") {
+            setTimeout(function () {
+                _this.paused = false;
+                _this.redraw();
+            }, 3000);
+        }
+    };
+    Game.prototype.pause = function (shouldPause) {
+        if (shouldPause) {
+            this.services.playPauseSound();
+            this.showMessage("Pause");
+        }
+        this.paused = shouldPause;
+        if (!shouldPause) {
+            this.redraw();
+        }
+    };
+    Game.prototype.gameOver = function () {
+        var _this = this;
+        if (this.isGameOver)
+            return;
+        this.isGameOver = true;
+        this.services.explode(this.nave.x + config_1.Config.naveWidth / 2, this.nave.y + config_1.Config.naveHeight / 2, config_1.Config.naveWidth * 1.5);
+        this.services.playPlayerDestroyed();
+        this.services.startGameOverTheme();
+        this.showMessage("You are dead");
+        setTimeout(function () {
+            _this.reset();
+        }, 3000);
+    };
+    Game.prototype.reset = function () {
+        // Clean up existing instances
+        if (this.nave) {
+            this.nave.destroy();
+        }
+        if (this.enemies) {
+            this.enemies.stopEnemyFire();
+        }
+        // Reset state
+        this.isGameOver = false;
+        this.paused = false;
+        this._level = 1;
+        this._score = 0;
+        this._life = 3;
+        // Recreate managers
+        this.shields = new shields_1.ShieldManager();
+        this.powerUps = new powerUps_1.PowerUpManager();
+        // Clear canvas
+        this.services.clearAll();
+        // Recreate game entities
+        this.enemies = new enemies_1.Enemies(this, this.services);
+        this.nave = new nave_1.Nave(this, this.services);
+        this.updateHud();
+    };
+    Game.prototype.update = function (deltaSeconds) {
+        if (this.paused || this.isGameOver)
+            return;
+        if (this.enemies) {
+            this.enemies.update(deltaSeconds);
+        }
+        if (this.nave) {
+            this.nave.tick(deltaSeconds);
+        }
+        this.powerUps.update(deltaSeconds, this.nave);
+    };
     Game.prototype.redraw = function () {
         this.services.clearAll();
-        this.services.drawHud(this._level, this._score, this._life);
+        this.updateHud();
         this.powerUps.clear();
         this.shields.draw();
-        if (this._enemies) {
-            this._enemies.paint();
+        if (this.enemies) {
+            this.enemies.paint();
         }
-        if (this._nave) {
-            this._nave.paint();
+        if (this.nave) {
+            this.nave.paint();
         }
     };
     return Game;
 }());
 exports.Game = Game;
-;
 
 
 /***/ }),
@@ -5080,7 +5014,6 @@ exports.SoundManager = SoundManager;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Nave = void 0;
-var colision_1 = __webpack_require__(124);
 var config_1 = __webpack_require__(913);
 var tools_1 = __webpack_require__(594);
 var Nave = /** @class */ (function () {
@@ -5101,32 +5034,41 @@ var Nave = /** @class */ (function () {
         this.life = config_1.Config.naveLife;
         this.y = this.lastDrawY;
         this.game = game;
-        this.paint();
-        window.onkeydown = function (event) { _this.move(event); };
-        window.onmousedown = function () { _this.startAutoFire(); };
-        window.onmouseup = function () { _this.stopAutoFire(); };
-        window.onmouseleave = function () { _this.stopAutoFire(); };
-        window.onmouseout = function () { _this.stopAutoFire(); };
-        window.onmousemove = function (event) { _this.move(event); };
-        window.addEventListener("touchstart", function (event) {
+        // Bind event handlers
+        this.boundKeyDown = function (e) { return _this.move(e); };
+        this.boundMouseDown = function () { return _this.startAutoFire(); };
+        this.boundMouseUp = function () { return _this.stopAutoFire(); };
+        this.boundMouseMove = function (e) { return _this.move(e); };
+        this.boundTouchStart = function (e) {
             var _a;
-            event.preventDefault();
-            var x = (_a = event.touches[0]) === null || _a === void 0 ? void 0 : _a.clientX;
+            e.preventDefault();
+            var x = (_a = e.touches[0]) === null || _a === void 0 ? void 0 : _a.clientX;
             if (x !== undefined) {
                 _this.handleTouchMovement(x);
             }
             _this.startAutoFire();
-        }, { passive: false });
-        window.addEventListener("touchmove", function (event) {
+        };
+        this.boundTouchMove = function (e) {
             var _a;
-            event.preventDefault();
-            var x = (_a = event.touches[0]) === null || _a === void 0 ? void 0 : _a.clientX;
+            e.preventDefault();
+            var x = (_a = e.touches[0]) === null || _a === void 0 ? void 0 : _a.clientX;
             if (x !== undefined) {
                 _this.handleTouchMovement(x);
             }
-        }, { passive: false });
-        window.addEventListener("touchend", function () { _this.stopAutoFire(); }, { passive: true });
-        window.addEventListener("touchcancel", function () { _this.stopAutoFire(); }, { passive: true });
+        };
+        this.boundTouchEnd = function () { return _this.stopAutoFire(); };
+        // Add event listeners
+        window.addEventListener("keydown", this.boundKeyDown);
+        window.addEventListener("mousedown", this.boundMouseDown);
+        window.addEventListener("mouseup", this.boundMouseUp);
+        window.addEventListener("mouseleave", this.boundMouseUp);
+        window.addEventListener("mouseout", this.boundMouseUp);
+        window.addEventListener("mousemove", this.boundMouseMove);
+        window.addEventListener("touchstart", this.boundTouchStart, { passive: false });
+        window.addEventListener("touchmove", this.boundTouchMove, { passive: false });
+        window.addEventListener("touchend", this.boundTouchEnd, { passive: true });
+        window.addEventListener("touchcancel", this.boundTouchEnd, { passive: true });
+        this.paint();
     }
     Nave.prototype.startAutoFire = function () {
         var _this = this;
@@ -5157,7 +5099,6 @@ var Nave = /** @class */ (function () {
         }
     };
     Nave.prototype.directionFire = function (x, y, width, height) {
-        var _this = this;
         var speed = -500; // px/s upward
         this.services.addProjectile({
             x: x,
@@ -5169,19 +5110,9 @@ var Nave = /** @class */ (function () {
             color: "#7fff00",
             owner: "player",
             onStep: function (p) {
-                var enemyIndex = colision_1.Colision.checkColision(p.x, p.y, width, height, _this.game.enemies.items);
-                if (enemyIndex !== -1) {
-                    var enemy = _this.game.enemies.items[enemyIndex];
-                    if (enemy) {
-                        _this.services.explode(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2, undefined, enemy.getColor());
-                    }
-                    _this.game.enemies.remove(enemyIndex, true);
-                    _this.game.enemies.paint();
-                    _this.shots = Math.max(0, _this.shots - 1);
-                    return false;
-                }
+                // Collision detection is handled by CollisionSystem
+                // This callback only checks if projectile is out of bounds
                 if (p.y + height < 0) {
-                    _this.shots = Math.max(0, _this.shots - 1);
                     return false;
                 }
                 return true;
@@ -5323,10 +5254,25 @@ var Nave = /** @class */ (function () {
             }
         }
     };
+    Nave.prototype.destroy = function () {
+        this.stopAutoFire();
+        if (this.flashTimeout) {
+            clearTimeout(this.flashTimeout);
+        }
+        window.removeEventListener("keydown", this.boundKeyDown);
+        window.removeEventListener("mousedown", this.boundMouseDown);
+        window.removeEventListener("mouseup", this.boundMouseUp);
+        window.removeEventListener("mouseleave", this.boundMouseUp);
+        window.removeEventListener("mouseout", this.boundMouseUp);
+        window.removeEventListener("mousemove", this.boundMouseMove);
+        window.removeEventListener("touchstart", this.boundTouchStart);
+        window.removeEventListener("touchmove", this.boundTouchMove);
+        window.removeEventListener("touchend", this.boundTouchEnd);
+        window.removeEventListener("touchcancel", this.boundTouchEnd);
+    };
     return Nave;
 }());
 exports.Nave = Nave;
-;
 
 
 /***/ }),

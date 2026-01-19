@@ -1,6 +1,5 @@
 import { Config } from "./config";
 import { Enemies } from "./enemies";
-import { Game } from "./game";
 import { services as defaultServices, Services, Projectile } from "./tools";
 import { ShieldManager } from "./shields";
 type AttackUpdate = "attacking" | "finished";
@@ -284,22 +283,18 @@ export class Enemy {
             onStep: (p: Projectile) => {
               const hitHorizontally = p.x + width >= nave.x && p.x <= nave.x + Config.naveWidth;
               const hitVertically = p.y + height >= nave.y && p.y <= nave.y + Config.naveHeight;
-               if (hitHorizontally && hitVertically && !nave.isInvulnerable()) {
-                  nave.life--;
-                  game.life = nave.life;
-                  nave.flashHit();
-                  if (nave.life <= 0) {
-                     this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth * 1.5);
-                     this.services.playPlayerDestroyed();
-                     this.services.startGameOverTheme();
-                     game.showMessage("You are dead");
-                     game.reload();
-                  }
-                  return false;
-               }
-               return p.y <= Config.canvas.height;
+              if (hitHorizontally && hitVertically && !nave.isInvulnerable()) {
+                nave.life--;
+                game.life = nave.life;
+                nave.flashHit();
+                if (nave.life <= 0) {
+                  game.gameOver();
+                }
+                return false;
+              }
+              return p.y <= Config.canvas.height;
             }
          });
       }
-   };
+   }
 }

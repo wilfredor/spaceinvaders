@@ -53,11 +53,7 @@ export class CollisionSystem {
           this.game.life = nave.life;
           nave.flashHit();
           if (nave.life <= 0) {
-            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth * 1.5);
-            this.services.playPlayerDestroyed();
-            this.services.startGameOverTheme();
-            this.game.showMessage("You are dead");
-            this.game.reload();
+            this.game.gameOver();
           }
           return false;
         }
@@ -82,16 +78,12 @@ export class CollisionSystem {
         enemy.resetPosition(0, 0);
         nave.life--;
         this.game.life = nave.life;
-          nave.flashHit();
-          if (nave.life <= 0) {
-            this.services.explode(nave.x + Config.naveWidth / 2, nave.y + Config.naveHeight / 2, Config.naveWidth);
-            this.services.playPlayerDestroyed();
-            this.services.startGameOverTheme();
-            this.game.showMessage("You are dead");
-            this.game.reload();
-            return;
-          }
+        nave.flashHit();
+        if (nave.life <= 0) {
+          this.game.gameOver();
+          return;
         }
+      }
     }
   }
 }
